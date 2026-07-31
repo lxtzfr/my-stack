@@ -1,0 +1,35 @@
+{
+  "name": "@lxtzfr/ci-scripts",
+  "version": "0.1.0",
+  "description": "Config-driven bump / build / push / deploy toolkit (git + GitLab/GitHub registry + Dokploy)",
+  "type": "module",
+  "license": "MIT",
+  "author": "Alexandre Wurtz",
+  "homepage": "https://github.com/lxtzfr/ci-scripts#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lxtzfr/ci-scripts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lxtzfr/ci-scripts/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "ci-scripts": "bin/ci-scripts.mjs"
+  },
+  "exports": {
+    ".": "./bin/ci-scripts.mjs",
+    "./shared/*": "./shared/*",
+    "./build/*": "./build/*",
+    "./dokploy/*": "./dokploy/*"
+  },
+  "files": [
+    "bin",
+    "build",
+    "dokploy",
+    "shared",
+    "ci-scripts.config.example.mjs"
+  ]
+}
