@@ -142,6 +142,13 @@ export default {
         // every domain gets the default global 'letsencrypt' resolver regardless of what else is
         // configured — Dokploy only honors a custom resolver when certificateType is 'custom'.
         // certResolver: 'letsencrypt-http',
+        // Optional: Traefik middleware names to attach to this domain's router(s). Each name must
+        // be defined elsewhere in the same Traefik provider Dokploy uses for this service — the
+        // simplest way is a `traefik.http.middlewares.<name>.<...>=...` label directly on the
+        // service in its docker-compose.yml (Traefik resolves same-provider middleware references
+        // unqualified). Kept in sync on every `dokploy-setup-env` run, including for domains that
+        // already exist.
+        // middlewares: ['web-compress'],
       },
     ],
     wildcard: { targetService: 'web', port: 3000 }, // *.<host> -> web; omit to skip wildcard routing

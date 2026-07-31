@@ -122,9 +122,37 @@ for (const svc of dokploySetup.composeServices) {
     // service (e.g. a host-based multi-tenant app), all sharing one cert resolver/port/service.
     const domainHosts = [].concat(svc.domainHost(host));
     const domains = await dokploy.domainByComposeId(compose.composeId);
+    // Traefik middleware names (must be defined elsewhere, e.g. via a `traefik.http.middlewares.*`
+    // label on the service in the compose file itself — see web/ci-scripts/docker-compose.yml's
+    // `compress` label for an example). Kept in sync on every run, including for domains that
+    // already exist, since domain.create only fires once at first provisioning.
+    const desiredMiddlewares = svc.middlewares ?? [];
     for (const domainHost of domainHosts) {
-      if (domains.some(d => d.host === domainHost)) {
-        console.log(`Domain ${domainHost} already exists, skipping.`);
+      const existingDomain = domains.find(d => d.host === domainHost);
+      if (existingDomain) {
+        const current = existingDomain.middlewares ?? [];
+        const inSync = current.length === desiredMiddlewares.length && current.every(m => desiredMiddlewares.includes(m));
+        if (inSync) {
+          console.log(`Domain ${domainHost} already exists and is up to date, skipping.`);
+        } else {
+          console.log(`Domain ${domainHost} exists — syncing middlewares (${current.join(', ') || 'none'} -> ${desiredMiddlewares.join(', ') || 'none'})...`);
+          await dokploy.domainUpdate({
+            domainId: existingDomain.domainId,
+            host: existingDomain.host,
+            path: existingDomain.path,
+            port: existingDomain.port,
+            customEntrypoint: existingDomain.customEntrypoint,
+            https: existingDomain.https,
+            certificateType: existingDomain.certificateType,
+            customCertResolver: existingDomain.customCertResolver,
+            serviceName: existingDomain.serviceName,
+            domainType: existingDomain.domainType,
+            internalPath: existingDomain.internalPath,
+            stripPath: existingDomain.stripPath,
+            forwardAuthEnabled: existingDomain.forwardAuthEnabled,
+            middlewares: desiredMiddlewares,
+          });
+        }
         continue;
       }
       console.log(`Creating domain ${domainHost} -> ${svc.name}:${svc.port}...`);
@@ -135,7 +163,7 @@ for (const svc of dokploySetup.composeServices) {
       const cert = svc.certResolver
         ? { certificateType: 'custom', customCertResolver: svc.certResolver }
         : { certificateType: 'letsencrypt', customCertResolver: null };
-      await dokploy.domainCreate({ ...domainBase, ...cert, host: domainHost, port: svc.port, composeId: compose.composeId, serviceName: svc.name });
+      await dokploy.domainCreate({ ...domainBase, ...cert, host: domainHost, port: svc.port, composeId: compose.composeId, serviceName: svc.name, middlewares: desiredMiddlewares });
     }
   }
 }

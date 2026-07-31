@@ -52,6 +52,7 @@ export const dokploy = {
   composeDeploy:        (composeId)       => call('POST', 'compose.deploy', { composeId }),
 
   domainCreate:         (body)            => call('POST', 'domain.create', body),
+  domainUpdate:         (body)            => call('POST', 'domain.update', body),
   domainByComposeId:    (composeId)       => call('GET',  `domain.byComposeId?composeId=${composeId}`),
   domainDelete:         (domainId)        => call('POST', 'domain.delete', { domainId }),
 
