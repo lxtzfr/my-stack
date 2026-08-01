@@ -65,6 +65,7 @@ pnpm add -D github:lxtzfr/ci-scripts#v2026.7.31-14.32
 | `gen-version <env>` | Generates a timestamp version + Android `versionCode`. |
 | `dokploy-setup-env <env>` | Provisions a new Dokploy environment (composes, domains, wildcard DNS) — idempotent. |
 | `dokploy-compose-sync <service> <env>` | Pushes the local `docker-compose.yml` to Dokploy if it drifted. |
+| `dokploy-env-sync <service> <env>` | Re-pushes the service's `envVars` values to Dokploy and redeploys. Needed because `setup-env.mjs` only sets them once, at first provisioning — a value changing in `envVars`/`.env` afterwards (a rotated token, a new var) never reaches Dokploy on its own. |
 | `dokploy-seed <env>` | SSHes into the VPS and runs the configured re-seed command. |
 
 Add `--force` to `build`/`build-apk`/`build-sub-image`/`build-all` to bypass the "already built"

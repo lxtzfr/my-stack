@@ -19,6 +19,7 @@ const commands = {
   'dokploy-setup-env':    'dokploy/setup-env.mjs',
   'dokploy-seed':         'dokploy/seed.mjs',
   'dokploy-compose-sync': 'dokploy/compose-sync.mjs',
+  'dokploy-env-sync':     'dokploy/env-sync.mjs',
 };
 
 const [command, ...args] = process.argv.slice(2);
