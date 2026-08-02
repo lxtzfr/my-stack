@@ -3,6 +3,7 @@ import { run, capture, checkoutMain, findBySuffix, printRecap, writeRecap } from
 import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags } from './docker-registry.mjs';
 import { hasToken } from '../dokploy/dokploy.mjs';
 import { syncCompose } from '../dokploy/compose-sync.mjs';
+import { syncEnv } from '../dokploy/env-sync.mjs';
 
 export function triggerDeploy(webhookUrl) {
   console.log('Triggering deploy...');
@@ -52,19 +53,25 @@ export async function buildAndDeployDockerService({
   let verifyAction = 'skipped';
   if (webhookUrl) {
     let composeDeployed = false;
+    let envSynced = false;
     if (hasToken()) {
       log.step('Checking Dokploy compose is up to date...');
       composeDeployed = await syncCompose(service, env, composeFilePath ?? join(dir, 'docker-compose.yml'));
+      // Best-effort (no throw if this service has no dokploySetup.composeServices entry) — keeps
+      // env var VALUES (secrets/config) honest on every build, not just at first provisioning. See
+      // env-sync.mjs for why that gap existed.
+      log.step('Checking Dokploy env vars are up to date...');
+      envSynced = await syncEnv(service, env);
     } else {
-      log.warn('DOKPLOY_TOKEN not set — skipping Dokploy compose sync check.');
+      log.warn('DOKPLOY_TOKEN not set — skipping Dokploy compose/env sync check.');
     }
-    // Nothing to deploy when the image was already built and compose didn't change — trigger
-    // would just reboot containers for no reason.
-    if (!composeDeployed && !matchedTag) {
+    // Nothing to deploy when the image was already built and neither compose nor env changed —
+    // trigger would just reboot containers for no reason.
+    if (!composeDeployed && !envSynced && !matchedTag) {
       triggerDeploy(webhookUrl);
       deployAction = 'triggered';
-    } else if (composeDeployed) {
-      deployAction = 'compose sync redeployed';
+    } else if (composeDeployed || envSynced) {
+      deployAction = [composeDeployed && 'compose', envSynced && 'env'].filter(Boolean).join('+') + ' sync redeployed';
     } else {
       log.skip('Nothing new to deploy — skipping trigger.');
       deployAction = 'skipped (nothing new)';
