@@ -1,0 +1,67 @@
+# kit-web
+
+Generic site utilities for TanStack Start — works for a single-domain app
+or a multi-domain one with the same API. No business logic, no assumptions
+about what your site is about: you always supply your own `TSite` config
+and content.
+
+## What's in here
+
+- **`createSiteResolver` / `createSingleSiteResolver`** — host → site
+  resolution, with an optional local-dev "view as another domain" cookie
+  override (never honored outside local hosts, so it can't be used to spoof
+  a domain in production).
+- **`createSiteConfigServerFn`** — a client-callable `createServerFn` that
+  resolves the current site, with a `?__site=` query-param escape hatch on
+  local hosts (stashed in a cookie so it survives loader revalidations).
+- **`createLlmsTxtRoute`** — an [llms.txt](https://llmstxt.org) route
+  handler factory.
+- **`createSitemapRoute`** — a `sitemap.xml` route handler factory.
+- **`createRobotsRoute`** — a `robots.txt` route handler factory.
+- **`buildHeadMeta`** — title/description/OG/Twitter `<head>` tag builder.
+
+Each of the four route factories returns a plain
+`{ server: { handlers: { GET } } }` object — pass it straight into
+`createFileRoute('/whatever')(...)`.
+
+## Usage
+
+```ts
+import { createSiteResolver, createLlmsTxtRoute } from 'kit-web'
+import { createFileRoute } from '@tanstack/react-router'
+
+interface MySite {
+  slug: string
+  word: string
+}
+
+const resolver = createSiteResolver<MySite>({
+  sites: {
+    'example.com': { slug: 'example', word: 'EXAMPLE' },
+  },
+  defaultSite: { slug: '', word: 'ERROR' },
+})
+
+export const Route = createFileRoute('/llms.txt')(
+  createLlmsTxtRoute(resolver, {
+    content: (site) => (site.slug ? `# ${site.word}\n\n...` : undefined),
+  }),
+)
+```
+
+## Install
+
+```json
+{
+  "dependencies": {
+    "kit-web": "github:lxtzfr/kit-web"
+  }
+}
+```
+
+## Not in here (on purpose)
+
+Anything specific to what a site is about — page lists, theme/visual
+identity, stat fetchers, business rules. This package only owns the
+generic plumbing (host resolution, response formatting, the llms.txt
+link-syntax quirk); everything else is config you supply.
