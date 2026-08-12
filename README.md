@@ -31,6 +31,29 @@ and content.
 - **`createSitemapRoute`** — a `sitemap.xml` route handler factory.
 - **`createRobotsRoute`** — a `robots.txt` route handler factory.
 - **`buildHeadMeta`** — title/description/OG/Twitter `<head>` tag builder.
+- **`createGlobalSingleton`** — `globalThis`-backed memoization for "one
+  instance per process" state (an event bus, a DB client...) — needed
+  because Vite/Nitro bundle route handlers and server functions into
+  separate chunks, so a plain module-level variable would give each chunk
+  its own private copy instead of sharing one.
+- **`publish` / `subscribe`** — generic in-process pub/sub (built on
+  `createGlobalSingleton`), for broadcasting to an SSE endpoint without
+  that route needing to know about every channel up front.
+- **`RUNTIME_DATA_DIR`** — where runtime-writable state persists across
+  redeploys (`process.env.DATA_DIR`, falling back to `./data` locally).
+- **`createSqlitePrismaClient`** — Prisma + SQLite bootstrap via
+  `@prisma/adapter-libsql` (works unmodified on Alpine/musl — no native
+  query-engine binary), memoized with `createGlobalSingleton`. Takes your
+  own generated `PrismaClient` constructor — kit-web never imports
+  `@prisma/client` itself, since it only has real types once generated
+  against your own `schema.prisma`:
+  ```ts
+  import { createSqlitePrismaClient, RUNTIME_DATA_DIR } from 'kit-web'
+  import { PrismaClient } from './generated/prisma/client.js'
+  import { join } from 'node:path'
+
+  export const db = createSqlitePrismaClient(PrismaClient, join(RUNTIME_DATA_DIR, 'app.db'))
+  ```
 
 Each of the four route factories returns a plain
 `{ server: { handlers: { GET } } }` object — pass it straight into
@@ -67,6 +90,17 @@ export const Route = createFileRoute('/llms.txt')(
 {
   "dependencies": {
     "kit-web": "github:lxtzfr/kit-web"
+  }
+}
+```
+
+Only needed if you use `createSqlitePrismaClient` — an optional peer, since
+plenty of consumers only want the site-resolver/route-factory pieces:
+
+```json
+{
+  "dependencies": {
+    "@prisma/adapter-libsql": "^7.9.1"
   }
 }
 ```

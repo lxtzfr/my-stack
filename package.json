@@ -1,7 +1,7 @@
 {
   "name": "kit-web",
-  "version": "0.1.0",
-  "description": "Generic multi-domain (or single-domain) site utilities for TanStack Start — llms.txt, sitemap.xml, robots.txt, head meta, and site resolution.",
+  "version": "0.2.0",
+  "description": "Generic multi-domain (or single-domain) site utilities for TanStack Start — llms.txt, sitemap.xml, robots.txt, head meta, site resolution, plus process-wide plumbing (event bus, data dir, Prisma/SQLite bootstrap).",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,9 +25,16 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@tanstack/react-start": "*"
+    "@tanstack/react-start": "*",
+    "@prisma/adapter-libsql": "*"
+  },
+  "peerDependenciesMeta": {
+    "@prisma/adapter-libsql": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@prisma/adapter-libsql": "^7.9.1",
     "@tanstack/react-start": "^1.0.0",
     "@types/node": "^22.10.2",
     "typescript": "^5.7.2"
