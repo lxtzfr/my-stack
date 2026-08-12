@@ -11,9 +11,21 @@ and content.
   resolution, with an optional local-dev "view as another domain" cookie
   override (never honored outside local hosts, so it can't be used to spoof
   a domain in production).
-- **`createSiteConfigServerFn`** — a client-callable `createServerFn` that
-  resolves the current site, with a `?__site=` query-param escape hatch on
-  local hosts (stashed in a cookie so it survives loader revalidations).
+- **`resolveSiteWithDevOverride`** — the logic behind a client-callable "get
+  current site" server function, with a `?__site=` query-param escape hatch
+  on local hosts (stashed in a cookie so it survives loader revalidations).
+  **Not** wrapped in `createServerFn` itself — see the note on that function
+  for why (TanStack Start's server-function compiler only scans your app's
+  own source, not code inside `node_modules`) — you wrap it in your own
+  `createServerFn` call:
+  ```ts
+  import { createServerFn } from '@tanstack/react-start'
+  import { resolveSiteWithDevOverride } from 'kit-web'
+
+  export const getSiteConfig = createServerFn({ method: 'GET' }).handler(
+    (): MySite => resolveSiteWithDevOverride(resolver),
+  )
+  ```
 - **`createLlmsTxtRoute`** — an [llms.txt](https://llmstxt.org) route
   handler factory.
 - **`createSitemapRoute`** — a `sitemap.xml` route handler factory.
