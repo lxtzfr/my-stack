@@ -1,15 +1,49 @@
 {
   "name": "kit-web",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Generic multi-domain (or single-domain) site utilities for TanStack Start — llms.txt, sitemap.xml, robots.txt, head meta, site resolution, plus process-wide plumbing (event bus, data dir, Prisma/SQLite bootstrap).",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+    "./siteResolver": {
+      "types": "./dist/siteResolver.d.ts",
+      "import": "./dist/siteResolver.js"
+    },
+    "./siteConfigServerFn": {
+      "types": "./dist/siteConfigServerFn.d.ts",
+      "import": "./dist/siteConfigServerFn.js"
+    },
+    "./llmsTxt": {
+      "types": "./dist/llmsTxt.d.ts",
+      "import": "./dist/llmsTxt.js"
+    },
+    "./sitemap": {
+      "types": "./dist/sitemap.d.ts",
+      "import": "./dist/sitemap.js"
+    },
+    "./robots": {
+      "types": "./dist/robots.d.ts",
+      "import": "./dist/robots.js"
+    },
+    "./headMeta": {
+      "types": "./dist/headMeta.d.ts",
+      "import": "./dist/headMeta.js"
+    },
+    "./globalSingleton": {
+      "types": "./dist/globalSingleton.d.ts",
+      "import": "./dist/globalSingleton.js"
+    },
+    "./eventBus": {
+      "types": "./dist/eventBus.d.ts",
+      "import": "./dist/eventBus.js"
+    },
+    "./dataDir": {
+      "types": "./dist/dataDir.d.ts",
+      "import": "./dist/dataDir.js"
+    },
+    "./prismaSqlite": {
+      "types": "./dist/prismaSqlite.d.ts",
+      "import": "./dist/prismaSqlite.js"
     }
   },
   "files": [
