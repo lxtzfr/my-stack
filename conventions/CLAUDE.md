@@ -26,14 +26,19 @@ Bugs and generic/reusable code that belong to kit-web's own domain (SQLite
 bootstrap, event bus, site resolution...) get fixed in the kit-web repo
 itself, not patched locally — including bugs only discovered indirectly
 (e.g. a DB timeout here that's actually a missing busy-timeout setting in
-kit-web). Pull the fix back with:
+kit-web).
+
+While iterating on such a fix, `pnpm link ../kit-web` (rebuild kit-web
+after each edit) instead of committing every attempt — the link only
+touches `node_modules`, never `package.json`/lockfile, so there's nothing
+to accidentally commit and no risk to CI/prod either way. Once the fix is
+confirmed working, commit + push it in the kit-web repo, then
+`pnpm install` here to drop the link and go back to the real dependency:
 
 ```sh
-pnpm update kit-web   # or: npm update kit-web
+pnpm install          # drops the link, restores the real dependency
+pnpm update kit-web   # pulls in the just-pushed fix (or any other kit-web change)
 ```
-
-Same command for pulling in any kit-web change, including ones you didn't
-make yourself — it also refreshes this block.
 
 ## Keep this file itself concise
 
