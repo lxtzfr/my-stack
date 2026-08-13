@@ -40,6 +40,19 @@ pnpm install          # drops the link, restores the real dependency
 pnpm update kit-web   # pulls in the just-pushed fix (or any other kit-web change)
 ```
 
+## Don't leave background dev servers running
+
+When starting a dev server to test something (`pnpm dev` and similar),
+track it so it can actually be stopped afterwards — don't fire-and-forget
+with a raw shell `&`/`nohup`. A background dev server that's never killed
+is easy to lose track of, and a stray one holding the same SQLite file
+open (each with its own in-memory state — cooldown maps, cached ids,
+timers) is a real source of confusing bugs, not just clutter. On Windows,
+`pkill`/`kill` from a POSIX shell often can't actually terminate a
+natively-spawned `node.exe` — use `Stop-Process -Id <pid>` (PowerShell)
+instead. Stop it explicitly once you're done testing rather than leaving
+it "in case it's needed again."
+
 ## Keep this file itself concise
 
 This block is synced into every project depending on kit-web — trim
