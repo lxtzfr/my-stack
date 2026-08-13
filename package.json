@@ -47,14 +47,20 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "conventions",
+    "scripts"
   ],
+  "bin": {
+    "kit-web-sync-conventions": "scripts/sync-conventions.mjs"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lxtzfr/kit-web.git"
   },
   "scripts": {
     "prepare": "tsc",
+    "postinstall": "node scripts/sync-conventions.mjs",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },

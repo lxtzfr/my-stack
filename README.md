@@ -123,6 +123,25 @@ factory pieces never need to install it:
 }
 ```
 
+## Conventions for AI coding assistants
+
+Installing kit-web also drops a short block of architectural conventions
+(server/client/lib/rpc folder organization — see `conventions/CLAUDE.md`)
+into your project's own `CLAUDE.md`, delimited by
+`<!-- kit-web:conventions:start/end -->` markers, so tools like Claude Code
+pick it up automatically in every project that depends on kit-web instead
+of it living only in one machine's local memory. This runs on install
+(`postinstall`) and is safe to re-run — it only touches its own delimited
+block, never the rest of your `CLAUDE.md`, and no-ops entirely in CI
+(`process.env.CI`).
+
+After bumping your `kit-web` version, re-sync manually to pick up any
+changes to the conventions themselves:
+
+```sh
+npx kit-web-sync-conventions
+```
+
 ## Not in here (on purpose)
 
 Anything specific to what a site is about — page lists, theme/visual
