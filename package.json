@@ -4,6 +4,9 @@
   "private": true,
   "description": "Personal multi-ecosystem stack — one independently installable kit per ecosystem (TanStack Start, NestJS, Unity, React Native, ...), plus shared install/update tooling.",
   "license": "MIT",
+  "scripts": {
+    "claude:setup": "node claude/install.mjs"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lxtzfr/my-stack.git"

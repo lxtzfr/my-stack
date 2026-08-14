@@ -46,6 +46,12 @@ ecosystem, so they stay as their own repos rather than a kit folder here):
 - [`lxtzfr/brand-img-gen`](https://github.com/lxtzfr/brand-img-gen) — brand
   image generation.
 
+## Claude Code setup
+
+[`claude/`](claude) holds a quick auto-setup for Claude Code on a new
+machine (currently: the Stop-hook notification) — run `pnpm claude:setup`.
+See [`claude/README.md`](claude/README.md).
+
 ## Shared tooling
 
 [`shared/`](shared) holds maintainer-only tooling used across kits — right
