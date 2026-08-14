@@ -8,11 +8,11 @@ importers:
 
   .: {}
 
+  core: {}
+
   nestjs: {}
 
   react-native: {}
-
-  shared: {}
 
   tanstack:
     devDependencies:

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Injects/updates @lxtzfr/my-stack-tanstack's managed blocks into the *consuming*
+// Injects/updates @lxtzfr/my-stack-unity's managed blocks into the *consuming*
 // project — a one-line pointer at conventions/CLAUDE.md into that project's
 // own CLAUDE.md, and a line-ending rule into its .gitattributes. The
 // CLAUDE.md block is a pointer, not a copy of the actual conventions text:
@@ -9,7 +9,7 @@
 // inside it to go read another file — including one under node_modules — so
 // there's nothing to keep in sync there.
 // Runs automatically on `npm/pnpm install` (see package.json's postinstall)
-// so every project that depends on @lxtzfr/my-stack-tanstack picks these up without
+// so every project that depends on @lxtzfr/my-stack-unity picks these up without
 // manual copy-pasting, and stays re-runnable for a direct invocation.
 //
 // Each block is delimited by its own START/END markers so re-running only
@@ -26,7 +26,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join, sep } from 'node:path'
 import { execSync } from 'node:child_process'
 
-const KIT_PKG_NAME = '@lxtzfr/my-stack-tanstack'
+const KIT_PKG_NAME = '@lxtzfr/my-stack-unity'
 
 // Lifecycle scripts run with cwd inside node_modules/<kit> — INIT_CWD is
 // npm/pnpm's own env var for "where the top-level install was actually run

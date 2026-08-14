@@ -112,9 +112,15 @@ export const Route = createFileRoute('/llms.txt')(
 {
   "dependencies": {
     "@lxtzfr/my-stack-tanstack": "github:lxtzfr/my-stack#path:tanstack"
+  },
+  "devDependencies": {
+    "@lxtzfr/my-stack-core": "github:lxtzfr/my-stack#path:core"
   }
 }
 ```
+
+`@lxtzfr/my-stack-core` is optional but recommended — see "Conventions
+for AI coding assistants" below for what it sets up.
 
 `@prisma/adapter-libsql` is only needed if you actually import
 `@lxtzfr/my-stack-tanstack/prismaSqlite` — declared as an optional peer, not a hard
@@ -131,22 +137,26 @@ factory pieces never need to install it:
 
 ## Conventions for AI coding assistants
 
-Installing this package also drops a one-line pointer into your project's own
-`CLAUDE.md`, delimited by `<!-- @lxtzfr/my-stack-tanstack:conventions:start/end -->` markers,
+Also installing `@lxtzfr/my-stack-core` (see Install above) drops a
+one-line pointer into your project's own `CLAUDE.md`, delimited by
+`<!-- @lxtzfr/my-stack-tanstack:conventions:start/end -->` markers,
 telling an AI coding assistant to read `node_modules/@lxtzfr/my-stack-tanstack/conventions/
 CLAUDE.md` for the actual architectural conventions (server/client/lib/rpc
 folder organization, contributing fixes back upstream, etc.) — a pointer
 rather than a copy, so there's nothing to fall out of sync when the
 conventions themselves change. It also ensures a `.gitattributes` with
-`* text=auto eol=lf` exists (delimited the same way, under `#
-@lxtzfr/my-stack-tanstack:gitattributes:start/end`), so CRLF/LF warnings and spurious
-"modified" files from a contributor's own `core.autocrlf` setting stop
-happening. Both run on install (`postinstall`) and are safe to re-run —
-each only touches its own delimited block, never the rest of the file, and
-neither does anything in CI (`process.env.CI`). Re-run manually with:
+`* text=auto eol=lf` and Git LFS tracking rules for common binary
+extensions exist (delimited the same way, under `# my-stack:gitattributes:start/end`
+and `# my-stack:gitattributes-lfs:start/end`), so CRLF/LF warnings and
+spurious "modified" files from a contributor's own `core.autocrlf`
+setting stop happening, and binary assets don't bloat the repo. Runs on
+`@lxtzfr/my-stack-core`'s install (`postinstall`) and is safe to re-run —
+each block only touches its own delimited region, never the rest of the
+file, and none of it does anything in CI (`process.env.CI`). Re-run
+manually with:
 
 ```sh
-npx my-stack-tanstack-sync-conventions
+npx my-stack-sync-conventions
 ```
 
 ## Not in here (on purpose)

@@ -2,4 +2,4 @@ packages:
   - tanstack
   - nestjs
   - react-native
-  - shared
+  - core

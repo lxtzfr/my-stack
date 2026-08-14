@@ -1,22 +1,24 @@
 #!/usr/bin/env node
-// Fans shared/sync-conventions.template.mjs out into each kit's own
+// Fans core/sync-conventions.template.mjs out into a kit's own
 // scripts/sync-conventions.mjs, substituting that kit's real package name.
-// Each generated file is fully self-contained — no runtime dependency on
-// `shared/` — because a consumer installing a single kit via
-// `github:lxtzfr/my-stack#path:<kit>` only ever fetches that kit's own
-// subdirectory (see shared/README.md for why).
+// This is legacy, npm-lifecycle-free tooling — kits with a package.json
+// (tanstack, nestjs, react-native) now depend on @lxtzfr/my-stack-core
+// as a real dependency instead (see core/README.md), so this generator
+// only still applies to unity, which has no package.json/npm install step
+// to hang a real dependency off of. Revisit once unity's own mechanism is
+// decided.
 //
-// Run after editing the template: `node shared/sync-to-kits.mjs`
+// Run after editing the template: `node core/sync-to-kits.mjs`
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
-const template = readFileSync(join(repoRoot, 'shared', 'sync-conventions.template.mjs'), 'utf-8')
+const template = readFileSync(join(repoRoot, 'core', 'sync-conventions.template.mjs'), 'utf-8')
 
 const kits = [
-  { dir: 'tanstack', pkgName: '@lxtzfr/my-stack-tanstack' },
+  { dir: 'unity', pkgName: '@lxtzfr/my-stack-unity' },
 ]
 
 for (const { dir, pkgName } of kits) {

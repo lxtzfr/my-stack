@@ -54,13 +54,15 @@ See [`claude/README.md`](claude/README.md).
 
 ## Shared tooling
 
-[`shared/`](shared) holds maintainer-only tooling used across kits — right
-now, the install/update conventions sync (a pointer into the consuming
-project's `CLAUDE.md`, plus a `.gitattributes` line-ending rule). It's not
-a runtime dependency of any kit: npm's `path:` subdirectory install only
-fetches the referenced kit folder, so each kit ships its own
-self-contained, generated copy of the sync script instead — see
-[`shared/README.md`](shared/README.md) for how that generation works.
+[`core/`](core) holds tooling shared across kits — the install/update
+conventions sync (a pointer into the consuming project's `CLAUDE.md` per
+installed kit, a `.gitattributes` line-ending rule, and Git LFS tracking
+rules). It's a **devDependency of the consuming project**, not of any
+kit — kits stay plain runtime packages, and `@lxtzfr/my-stack-core`
+detects which kits are installed by reading the consumer's own
+`package.json`. `unity`, which has no npm install step, still uses a
+generated per-kit copy — see [`core/README.md`](core/README.md) for both
+mechanisms.
 
 ## Workspace
 
