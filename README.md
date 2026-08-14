@@ -36,6 +36,16 @@ it — this file only covers what's shared across all of them.
   consumers depend on a subdirectory of this repo directly, e.g.
   `"@lxtzfr/my-stack-tanstack": "github:lxtzfr/my-stack#path:tanstack"`.
 
+## Related repos
+
+Not part of this workspace (they're cross-cutting, not tied to one
+ecosystem, so they stay as their own repos rather than a kit folder here):
+
+- [`lxtzfr/ci-scripts`](https://github.com/lxtzfr/ci-scripts) — shared CI
+  scripts.
+- [`lxtzfr/brand-img-gen`](https://github.com/lxtzfr/brand-img-gen) — brand
+  image generation.
+
 ## Shared tooling
 
 [`shared/`](shared) holds maintainer-only tooling used across kits — right
