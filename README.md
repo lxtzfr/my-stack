@@ -131,21 +131,19 @@ factory pieces never need to install it:
 
 ## Conventions for AI coding assistants
 
-Installing kit-web also drops a short block of architectural conventions
-(server/client/lib/rpc folder organization — see `conventions/CLAUDE.md`)
-into your project's own `CLAUDE.md`, delimited by
-`<!-- kit-web:conventions:start/end -->` markers, so tools like Claude Code
-pick it up automatically in every project that depends on kit-web instead
-of it living only in one machine's local memory. It also ensures a
-`.gitattributes` with `* text=auto eol=lf` exists (delimited the same way,
-under `# kit-web:gitattributes:start/end`), so CRLF/LF warnings and
-spurious "modified" files from a contributor's own `core.autocrlf` setting
-stop happening. Both run on install (`postinstall`) and are safe to
-re-run — each only touches its own delimited block, never the rest of the
-file, and neither does anything in CI (`process.env.CI`).
-
-After bumping your `kit-web` version, re-sync manually to pick up any
-changes to the conventions themselves:
+Installing kit-web also drops a one-line pointer into your project's own
+`CLAUDE.md`, delimited by `<!-- kit-web:conventions:start/end -->` markers,
+telling an AI coding assistant to read `node_modules/kit-web/conventions/
+CLAUDE.md` for the actual architectural conventions (server/client/lib/rpc
+folder organization, contributing fixes back to kit-web, etc.) — a pointer
+rather than a copy, so there's nothing to fall out of sync when the
+conventions themselves change. It also ensures a `.gitattributes` with
+`* text=auto eol=lf` exists (delimited the same way, under `#
+kit-web:gitattributes:start/end`), so CRLF/LF warnings and spurious
+"modified" files from a contributor's own `core.autocrlf` setting stop
+happening. Both run on install (`postinstall`) and are safe to re-run —
+each only touches its own delimited block, never the rest of the file, and
+neither does anything in CI (`process.env.CI`). Re-run manually with:
 
 ```sh
 npx kit-web-sync-conventions
