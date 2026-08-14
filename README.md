@@ -1,157 +1,61 @@
-# kit-web
+# my-stack
 
-Generic site utilities for TanStack Start — works for a single-domain app
-or a multi-domain one with the same API. No business logic, no assumptions
-about what your site is about: you always supply your own `TSite` config
-and content.
+Personal collection of generic, framework-specific kits — one folder per
+ecosystem, each independently installable, none of them aware of the
+others. No business logic, no assumptions about what a consuming project
+is about: every kit is generic plumbing you configure, not a framework.
 
-**Each piece is its own subpath import** (`kit-web/siteResolver`, not a
-flat `kit-web` barrel) — deliberately, not just for tidiness: in Vite dev
-mode (no tree-shaking), importing anything from a single barrel entry point
-forces *every* re-exported module to be evaluated, including ones with
-unmet optional peers (`prismaSqlite.js`'s `@prisma/adapter-libsql`) or
-server-only imports (`siteConfigServerFn.js`'s `@tanstack/react-start/
-server`) — that can leak server-only code into a client bundle, or crash a
-consumer that only wanted the site resolver and never installed Prisma.
-Subpath imports mean you only ever load what you actually import.
+## Kits
 
-## What's in here
+- [`tanstack/`](tanstack) — `@lxtzfr/my-stack-tanstack`: site utilities for
+  TanStack Start (host resolution, llms.txt/sitemap/robots routes, head
+  meta, Prisma/SQLite bootstrap, ...). The only kit built out so far.
+- [`nestjs/`](nestjs) — `@lxtzfr/my-stack-nestjs`: not built yet.
+- [`react-native/`](react-native) — `@lxtzfr/my-stack-react-native`: not
+  built yet.
+- [`unity/`](unity) — not built yet, not an npm package (see its own
+  README for why).
 
-- **`kit-web/siteResolver`** — `createSiteResolver` / `createSingleSiteResolver`:
-  host → site resolution, with an optional local-dev "view as another
-  domain" cookie override (never honored outside local hosts, so it can't
-  be used to spoof a domain in production).
-- **`kit-web/forwardedOrigin`** — `forwardedOrigin` / `withForwardedOrigin`: reads Traefik's
-  `X-Forwarded-Proto`/`X-Forwarded-Host` headers, since every app here sits behind it and a raw
-  `Request`'s own `.url` is always `http://`. Use `withForwardedOrigin(request)` before handing a
-  `Request` to code that derives an absolute URL from `request.url` itself and has no forwarded-
-  header support of its own — `@auth/core`'s `Auth()` being the motivating example (wrong `http://`
-  OAuth `redirect_uri`, wrong `Secure`-cookie decision, otherwise).
-- **`kit-web/siteConfigServerFn`** — `resolveSiteWithDevOverride`: the logic
-  behind a client-callable "get current site" server function, with a
-  `?__site=` query-param escape hatch on local hosts (stashed in a cookie so
-  it survives loader revalidations). **Not** wrapped in `createServerFn`
-  itself — TanStack Start's server-function compiler only scans your app's
-  own source, not code inside `node_modules` — you wrap it in your own
-  `createServerFn` call:
-  ```ts
-  import { createServerFn } from '@tanstack/react-start'
-  import { resolveSiteWithDevOverride } from 'kit-web/siteConfigServerFn'
+Each kit has its own README with what's actually in it and how to install
+it — this file only covers what's shared across all of them.
 
-  export const getSiteConfig = createServerFn({ method: 'GET' }).handler(
-    (): MySite => resolveSiteWithDevOverride(resolver),
-  )
-  ```
-- **`kit-web/llmsTxt`** — `createLlmsTxtRoute`: an
-  [llms.txt](https://llmstxt.org) route handler factory.
-- **`kit-web/sitemap`** — `createSitemapRoute`: a `sitemap.xml` route
-  handler factory.
-- **`kit-web/robots`** — `createRobotsRoute`: a `robots.txt` route handler
-  factory.
-- **`kit-web/headMeta`** — `buildHeadMeta`: title/description/OG/Twitter
-  `<head>` tag builder.
-- **`kit-web/globalSingleton`** — `createGlobalSingleton`: `globalThis`-backed
-  memoization for "one instance per process" state (an event bus, a DB
-  client...) — needed because Vite/Nitro bundle route handlers and server
-  functions into separate chunks, so a plain module-level variable would
-  give each chunk its own private copy instead of sharing one.
-- **`kit-web/eventBus`** — `publish` / `subscribe`: generic in-process
-  pub/sub (built on `createGlobalSingleton`), for broadcasting to an SSE
-  endpoint without that route needing to know about every channel up front.
-- **`kit-web/dataDir`** — `RUNTIME_DATA_DIR`: where runtime-writable state
-  persists across redeploys (`process.env.DATA_DIR`, falling back to
-  `./data` locally).
-- **`kit-web/prismaSqlite`** — `createSqlitePrismaClient`: Prisma + SQLite
-  bootstrap via `@prisma/adapter-libsql` (works unmodified on Alpine/musl —
-  no native query-engine binary), memoized with `createGlobalSingleton`.
-  Takes your own generated `PrismaClient` constructor — kit-web never
-  imports `@prisma/client` itself, since it only has real types once
-  generated against your own `schema.prisma`:
-  ```ts
-  import { createSqlitePrismaClient } from 'kit-web/prismaSqlite'
-  import { RUNTIME_DATA_DIR } from 'kit-web/dataDir'
-  import { PrismaClient } from './generated/prisma/client.js'
-  import { join } from 'node:path'
+## Philosophy
 
-  export const db = createSqlitePrismaClient(PrismaClient, join(RUNTIME_DATA_DIR, 'app.db'))
-  ```
+- **One kit, one ecosystem.** A kit only depends on its own ecosystem's
+  tooling. Nothing NestJS-specific leaks into the TanStack kit, nothing
+  Unity-specific leaks into React Native, etc.
+- **Subpath imports, not a barrel.** Every kit exposes each piece as its
+  own subpath import (e.g. `@lxtzfr/my-stack-tanstack/siteResolver`) rather
+  than a single flat entry point, so importing one piece never forces
+  evaluation of unrelated modules with unmet optional peers or server-only
+  code.
+- **No business logic.** Kits own generic plumbing; anything specific to
+  what a particular app/site/game is about is config the consumer
+  supplies, never baked into the kit.
+- **Install stays git-based.** Kits aren't published to the npm registry —
+  consumers depend on a subdirectory of this repo directly, e.g.
+  `"@lxtzfr/my-stack-tanstack": "github:lxtzfr/my-stack#path:tanstack"`.
 
-Each of the four route factories returns a plain
-`{ server: { handlers: { GET } } }` object — pass it straight into
-`createFileRoute('/whatever')(...)`.
+## Shared tooling
 
-## Usage
+[`shared/`](shared) holds maintainer-only tooling used across kits — right
+now, the install/update conventions sync (a pointer into the consuming
+project's `CLAUDE.md`, plus a `.gitattributes` line-ending rule). It's not
+a runtime dependency of any kit: npm's `path:` subdirectory install only
+fetches the referenced kit folder, so each kit ships its own
+self-contained, generated copy of the sync script instead — see
+[`shared/README.md`](shared/README.md) for how that generation works.
 
-```ts
-import { createSiteResolver } from 'kit-web/siteResolver'
-import { createLlmsTxtRoute } from 'kit-web/llmsTxt'
-import { createFileRoute } from '@tanstack/react-router'
+## Workspace
 
-interface MySite {
-  slug: string
-  word: string
-}
-
-const resolver = createSiteResolver<MySite>({
-  sites: {
-    'example.com': { slug: 'example', word: 'EXAMPLE' },
-  },
-  defaultSite: { slug: '', word: 'ERROR' },
-})
-
-export const Route = createFileRoute('/llms.txt')(
-  createLlmsTxtRoute(resolver, {
-    content: (site) => (site.slug ? `# ${site.word}\n\n...` : undefined),
-  }),
-)
-```
-
-## Install
-
-```json
-{
-  "dependencies": {
-    "kit-web": "github:lxtzfr/kit-web"
-  }
-}
-```
-
-`@prisma/adapter-libsql` is only needed if you actually import
-`kit-web/prismaSqlite` — declared as an optional peer, not a hard
-dependency, precisely so consumers who only want the site-resolver/route-
-factory pieces never need to install it:
-
-```json
-{
-  "dependencies": {
-    "@prisma/adapter-libsql": "^7.9.1"
-  }
-}
-```
-
-## Conventions for AI coding assistants
-
-Installing kit-web also drops a one-line pointer into your project's own
-`CLAUDE.md`, delimited by `<!-- kit-web:conventions:start/end -->` markers,
-telling an AI coding assistant to read `node_modules/kit-web/conventions/
-CLAUDE.md` for the actual architectural conventions (server/client/lib/rpc
-folder organization, contributing fixes back to kit-web, etc.) — a pointer
-rather than a copy, so there's nothing to fall out of sync when the
-conventions themselves change. It also ensures a `.gitattributes` with
-`* text=auto eol=lf` exists (delimited the same way, under `#
-kit-web:gitattributes:start/end`), so CRLF/LF warnings and spurious
-"modified" files from a contributor's own `core.autocrlf` setting stop
-happening. Both run on install (`postinstall`) and are safe to re-run —
-each only touches its own delimited block, never the rest of the file, and
-neither does anything in CI (`process.env.CI`). Re-run manually with:
+This repo is a pnpm workspace (`pnpm-workspace.yaml`) so kits with real
+code can be built/typechecked together during development:
 
 ```sh
-npx kit-web-sync-conventions
+pnpm install
+pnpm --filter @lxtzfr/my-stack-tanstack build
 ```
 
-## Not in here (on purpose)
-
-Anything specific to what a site is about — page lists, theme/visual
-identity, stat fetchers, business rules. This package only owns the
-generic plumbing (host resolution, response formatting, the llms.txt
-link-syntax quirk); everything else is config you supply.
+Each kit's own README documents its actual install instructions for
+consumers, who never see or need the workspace — they install a single
+kit as a plain git dependency.

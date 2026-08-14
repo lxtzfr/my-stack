@@ -1,0 +1,7 @@
+{
+  "name": "@lxtzfr/my-stack-shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Maintainer-only tooling shared across my-stack kits — not a runtime dependency of any kit (see README.md).",
+  "type": "module"
+}

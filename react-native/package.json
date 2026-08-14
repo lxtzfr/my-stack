@@ -1,0 +1,12 @@
+{
+  "name": "@lxtzfr/my-stack-react-native",
+  "version": "0.0.0",
+  "description": "Generic React Native utilities — not built yet. See README.md.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lxtzfr/my-stack.git",
+    "directory": "react-native"
+  }
+}
