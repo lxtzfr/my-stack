@@ -29,13 +29,16 @@ itself, not patched locally — including bugs only discovered indirectly
 kit-web).
 
 While iterating on such a fix, `pnpm link ../kit-web` (rebuild kit-web
-after each edit) instead of committing every attempt — the link only
-touches `node_modules`, never `package.json`/lockfile, so there's nothing
-to accidentally commit and no risk to CI/prod either way. Once the fix is
-confirmed working, commit + push it in the kit-web repo, then
-`pnpm install` here to drop the link and go back to the real dependency:
+after each edit) instead of committing every attempt. On at least some
+pnpm versions this *does* rewrite the `kit-web` entry in `package.json`
+(to `link:../kit-web`) and `pnpm-lock.yaml`, despite only being meant to
+touch `node_modules` — check `git diff package.json pnpm-lock.yaml` before
+moving on, and `git checkout -- package.json pnpm-lock.yaml` to discard
+that rewrite if present. Once the fix is confirmed working, commit + push
+it in the kit-web repo, then restore the real dependency here:
 
 ```sh
+git checkout -- package.json pnpm-lock.yaml   # only if `pnpm link` rewrote them — see above
 pnpm install          # drops the link, restores the real dependency
 pnpm update kit-web   # pulls in the just-pushed fix (or any other kit-web change)
 ```
