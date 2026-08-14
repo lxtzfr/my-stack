@@ -50,6 +50,11 @@ Subpath imports mean you only ever load what you actually import.
   factory.
 - **`@lxtzfr/my-stack-tanstack/headMeta`** — `buildHeadMeta`: title/description/OG/Twitter
   `<head>` tag builder.
+- **`@lxtzfr/my-stack-tanstack/brandHead`** — `buildBrandHead`: charset/viewport/title/
+  description/OG/favicon tag set for a root route's `head()`, for multi-site apps where
+  only some sites have generated brand assets (`public/<slug>/{logo.svg,favicon-32.png,
+  favicon.ico,og.png}`) — sites without them get bare title/description and no favicon
+  links instead of 404ing on assets that were never generated.
 - **`@lxtzfr/my-stack-tanstack/globalSingleton`** — `createGlobalSingleton`: `globalThis`-backed
   memoization for "one instance per process" state (an event bus, a DB
   client...) — needed because Vite/Nitro bundle route handlers and server
