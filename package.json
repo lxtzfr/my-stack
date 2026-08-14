@@ -9,6 +9,10 @@
       "types": "./dist/siteResolver.d.ts",
       "import": "./dist/siteResolver.js"
     },
+    "./forwardedOrigin": {
+      "types": "./dist/forwardedOrigin.d.ts",
+      "import": "./dist/forwardedOrigin.js"
+    },
     "./siteConfigServerFn": {
       "types": "./dist/siteConfigServerFn.d.ts",
       "import": "./dist/siteConfigServerFn.js"

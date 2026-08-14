@@ -21,6 +21,12 @@ Subpath imports mean you only ever load what you actually import.
   host → site resolution, with an optional local-dev "view as another
   domain" cookie override (never honored outside local hosts, so it can't
   be used to spoof a domain in production).
+- **`kit-web/forwardedOrigin`** — `forwardedOrigin` / `withForwardedOrigin`: reads Traefik's
+  `X-Forwarded-Proto`/`X-Forwarded-Host` headers, since every app here sits behind it and a raw
+  `Request`'s own `.url` is always `http://`. Use `withForwardedOrigin(request)` before handing a
+  `Request` to code that derives an absolute URL from `request.url` itself and has no forwarded-
+  header support of its own — `@auth/core`'s `Auth()` being the motivating example (wrong `http://`
+  OAuth `redirect_uri`, wrong `Secure`-cookie decision, otherwise).
 - **`kit-web/siteConfigServerFn`** — `resolveSiteWithDevOverride`: the logic
   behind a client-callable "get current site" server function, with a
   `?__site=` query-param escape hatch on local hosts (stashed in a cookie so
