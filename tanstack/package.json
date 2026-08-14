@@ -1,7 +1,7 @@
 {
   "name": "@lxtzfr/my-stack-tanstack",
-  "version": "0.3.0",
-  "description": "Generic multi-domain (or single-domain) site utilities for TanStack Start — llms.txt, sitemap.xml, robots.txt, head meta, site resolution, plus process-wide plumbing (event bus, data dir, Prisma/SQLite bootstrap).",
+  "version": "0.4.0",
+  "description": "Generic multi-domain (or single-domain) site utilities for TanStack Start — llms.txt, sitemap.xml, robots.txt, head meta, site resolution, a dev-only site switcher, plus process-wide plumbing (event bus, data dir, Prisma/SQLite bootstrap).",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -48,6 +48,10 @@
     "./prismaSqlite": {
       "types": "./dist/prismaSqlite.d.ts",
       "import": "./dist/prismaSqlite.js"
+    },
+    "./DevSiteSwitcher": {
+      "types": "./dist/DevSiteSwitcher.d.ts",
+      "import": "./dist/DevSiteSwitcher.js"
     }
   },
   "files": [
@@ -66,17 +70,33 @@
   },
   "peerDependencies": {
     "@tanstack/react-start": "*",
-    "@prisma/adapter-libsql": "*"
+    "@tanstack/react-router": "*",
+    "@prisma/adapter-libsql": "*",
+    "@mantine/core": "*",
+    "react": "*"
   },
   "peerDependenciesMeta": {
     "@prisma/adapter-libsql": {
       "optional": true
+    },
+    "@tanstack/react-router": {
+      "optional": true
+    },
+    "@mantine/core": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
     }
   },
   "devDependencies": {
+    "@mantine/core": "^9.5.0",
     "@prisma/adapter-libsql": "^7.9.1",
+    "@tanstack/react-router": "^1.0.0",
     "@tanstack/react-start": "^1.0.0",
     "@types/node": "^22.10.2",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
     "typescript": "^5.7.2"
   }
 }
