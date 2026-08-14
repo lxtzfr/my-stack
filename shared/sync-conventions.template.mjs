@@ -24,6 +24,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join, sep } from 'node:path'
+import { execSync } from 'node:child_process'
 
 const KIT_PKG_NAME = '__KIT_PKG_NAME__'
 
@@ -86,12 +87,43 @@ function syncGitAttributes() {
   }
 }
 
+// Binary assets committed straight into git bloat clone size and diff
+// noise forever, even after deletion — Git LFS stores them as pointers
+// instead. Consuming projects tend to forget to turn this on until it's
+// already too late for some file, so wire it up automatically: track a
+// generic set of binary extensions and initialize LFS's git hooks.
+function syncGitLfs() {
+  const START = `# ${KIT_PKG_NAME}:gitattributes-lfs:start`
+  const END = `# ${KIT_PKG_NAME}:gitattributes-lfs:end`
+  const patterns = [
+    '*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.ico', '*.psd', '*.ai',
+    '*.mp3', '*.wav', '*.mp4', '*.mov', '*.webm',
+    '*.ttf', '*.otf', '*.woff', '*.woff2',
+    '*.pdf', '*.zip',
+  ]
+  const rules = patterns.map((p) => `${p} filter=lfs diff=lfs merge=lfs -text`).join('\n')
+  const wrapped = `${START}\n# Managed by ${KIT_PKG_NAME} — re-run its sync-conventions bin to refresh.\n${rules}\n${END}`
+
+  const path = join(targetRoot, '.gitattributes')
+  const wasExisting = existsSync(path)
+  if (syncManagedBlock(path, START, END, wrapped)) {
+    console.log(`[${KIT_PKG_NAME}] ${wasExisting ? 'updated' : 'created'} LFS tracking rules in ${path}`)
+  }
+
+  try {
+    execSync('git lfs install', { cwd: targetRoot, stdio: 'ignore' })
+  } catch {
+    console.warn(`[${KIT_PKG_NAME}] git-lfs not found — install it (https://git-lfs.com) then run \`git lfs install\` in ${targetRoot}`)
+  }
+}
+
 function main() {
   if (process.env.CI) return // don't rewrite files unexpectedly in CI
   if (`${targetRoot}${sep}`.includes(`${sep}node_modules${sep}`)) return // safety net
 
   syncClaudeMd()
   syncGitAttributes()
+  syncGitLfs()
 }
 
 main()
