@@ -9,8 +9,10 @@ is about: every kit is generic plumbing you configure, not a framework.
 
 - [`tanstack/`](tanstack) — `@lxtzfr/my-stack-tanstack`: site utilities for
   TanStack Start (host resolution, llms.txt/sitemap/robots routes, head
-  meta, Prisma/SQLite bootstrap, ...). The only kit built out so far.
-- [`nestjs/`](nestjs) — `@lxtzfr/my-stack-nestjs`: not built yet.
+  meta, Prisma/SQLite bootstrap, ...).
+- [`nestjs/`](nestjs) — `@lxtzfr/my-stack-nestjs`: request-lifecycle
+  plumbing for NestJS (request-scoped logging, global exception filters,
+  Zod validation pipe).
 - [`react-native/`](react-native) — `@lxtzfr/my-stack-react-native`: not
   built yet.
 - [`unity/`](unity) — not built yet, not an npm package (see its own
