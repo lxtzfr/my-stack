@@ -19,6 +19,10 @@ is about: every kit is generic plumbing you configure, not a framework.
 Each kit has its own README with what's actually in it and how to install
 it — this file only covers what's shared across all of them.
 
+Whenever you install a kit, also add
+[`@lxtzfr/my-stack-core`](core) as a devDependency — see "Shared tooling"
+below for what it sets up and keeps up to date.
+
 ## Philosophy
 
 - **One kit, one ecosystem.** A kit only depends on its own ecosystem's
