@@ -3,31 +3,30 @@
   "version": "0.1.0",
   "description": "Generic NestJS request-lifecycle plumbing — request-scoped logging, global exception filters, Zod validation pipe.",
   "license": "MIT",
-  "type": "module",
   "exports": {
     "./requestContext": {
       "types": "./dist/requestContext.d.ts",
-      "import": "./dist/requestContext.js"
+      "default": "./dist/requestContext.js"
     },
     "./requestContextMiddleware": {
       "types": "./dist/requestContextMiddleware.d.ts",
-      "import": "./dist/requestContextMiddleware.js"
+      "default": "./dist/requestContextMiddleware.js"
     },
     "./contextLogger": {
       "types": "./dist/contextLogger.d.ts",
-      "import": "./dist/contextLogger.js"
+      "default": "./dist/contextLogger.js"
     },
     "./zodPipe": {
       "types": "./dist/zodPipe.d.ts",
-      "import": "./dist/zodPipe.js"
+      "default": "./dist/zodPipe.js"
     },
     "./httpExceptionFilter": {
       "types": "./dist/httpExceptionFilter.d.ts",
-      "import": "./dist/httpExceptionFilter.js"
+      "default": "./dist/httpExceptionFilter.js"
     },
     "./allExceptionsFilter": {
       "types": "./dist/allExceptionsFilter.d.ts",
-      "import": "./dist/allExceptionsFilter.js"
+      "default": "./dist/allExceptionsFilter.js"
     }
   },
   "files": [

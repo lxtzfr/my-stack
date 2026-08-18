@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common'
 import type { Request, Response } from 'express'
-import { ContextLogger } from './contextLogger.js'
+import { ContextLogger } from './contextLogger'
 
 export interface AllExceptionsFilterOptions {
   /** Body's `error` field for the 500 response. Defaults to a generic code — pass your own

@@ -9,6 +9,11 @@ project-specific stay config you pass in.
 not a flat barrel) — same reasoning as the TanStack kit: importing one
 piece should never force evaluation of unrelated modules.
 
+Built as CommonJS, unlike the TanStack kit's ESM — NestJS CLI projects
+default to CommonJS (`nest build` via plain `tsc`), and that's this kit's
+actual consumer base. Works from an ESM consumer too (Node's `import` can
+load a CJS file).
+
 ## What's in here
 
 - **`@lxtzfr/my-stack-nestjs/requestContext`** — `requestContext` / `getRequestId` /

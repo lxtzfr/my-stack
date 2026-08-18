@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common'
 import type { Request, Response } from 'express'
-import { ContextLogger } from './contextLogger.js'
+import { ContextLogger } from './contextLogger'
 
 export interface HttpExceptionFilterOptions {
   /** Runs before the default body formatting — return a response body to short-circuit it

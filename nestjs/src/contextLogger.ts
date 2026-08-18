@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common'
-import { getRequestId } from './requestContext.js'
+import { getRequestId } from './requestContext'
 
 /** Drop-in replacement for `new Logger(context)` that prefixes every line with the current
  *  request's id (from `requestContext.ts`), so concurrent requests' interleaved log lines
