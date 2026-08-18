@@ -5,9 +5,10 @@
   "description": "Install/update tooling for my-stack kits — CLAUDE.md pointer, .gitattributes, Git LFS. A devDependency of the consuming project, not of any kit. See README.md.",
   "type": "module",
   "bin": {
-    "my-stack-sync-conventions": "sync-conventions.mjs"
+    "my-stack-sync-conventions": "sync-conventions.mjs",
+    "my-stack-check-freshness": "check-freshness.mjs"
   },
   "scripts": {
-    "postinstall": "node sync-conventions.mjs"
+    "postinstall": "node sync-conventions.mjs && node check-freshness.mjs"
   }
 }

@@ -23,7 +23,15 @@ and writes that kit's conventions pointer — so a consumer installs both:
 }
 ```
 
-Re-run manually with `npx my-stack-sync-conventions`. Each block
+On the same `postinstall`, `check-freshness.mjs` also compares the
+commit each `@lxtzfr/my-stack-*` package is locked to (read from
+`pnpm-lock.yaml`) against my-stack's current default-branch commit, and
+prints a warning if a project is behind — the git-dependency equivalent
+of `npm outdated`, since these deps have no semver to check. Silent if
+offline, in CI, or on a non-pnpm project. Re-run manually with
+`npx my-stack-check-freshness`.
+
+Re-run `sync-conventions.mjs` manually with `npx my-stack-sync-conventions`. Each block
 (the `.gitattributes`/LFS rules once, each kit's CLAUDE.md pointer
 individually) is delimited by its own start/end markers, so re-running is
 idempotent and only touches its own block.

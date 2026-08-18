@@ -66,6 +66,7 @@ const settings = existsSync(settingsPath)
 
 settings.hooks ??= {};
 settings.hooks.Stop ??= [];
+settings.hooks.SessionStart ??= [];
 
 const hookCommand = (script) => ({
   type: "command",
@@ -81,6 +82,22 @@ const alreadyWired = settings.hooks.Stop.some((entry) =>
 if (!alreadyWired) {
   settings.hooks.Stop.push({
     hooks: [hookCommand("show-notification.ps1"), hookCommand("play-notification.ps1")],
+  });
+}
+
+// Warns at the start of every session, in whatever project it's opened in,
+// if that project's @lxtzfr/my-stack-* packages are locked to a stale
+// commit — see core/check-freshness.mjs. Points at this repo's own
+// checkout rather than a copy, so editing the script takes effect on the
+// next session without re-running install.mjs.
+const checkFreshnessPath = join(sourceDir, "..", "core", "check-freshness.mjs");
+const freshnessAlreadyWired = settings.hooks.SessionStart.some((entry) =>
+  entry.hooks?.some((hook) => hook.args?.some((arg) => arg.includes("check-freshness.mjs"))),
+);
+
+if (!freshnessAlreadyWired) {
+  settings.hooks.SessionStart.push({
+    hooks: [{ type: "command", command: "node", args: [checkFreshnessPath], timeout: 5 }],
   });
 }
 
