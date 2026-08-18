@@ -1,4 +1,4 @@
-import { run, capture } from '../../shared/utils.mjs';
+import { run, capture, registerSecret } from '../../shared/utils.mjs';
 
 const GHCR_HOST = 'ghcr.io';
 
@@ -11,6 +11,7 @@ export function parseNamespace(remote) {
 export function dockerLogin() {
   const token = process.env.GITHUB_TOKEN ?? capture(['gh', 'auth', 'token']);
   if (!token) { console.error('GITHUB_TOKEN missing (or run `gh auth login`) — needs write:packages/read:packages/delete:packages scopes'); process.exit(1); }
+  registerSecret(token);
   const owner = capture(['gh', 'api', 'user', '--jq', '.login']) || process.env.GITHUB_ACTOR;
   if (!owner) { console.error('Could not resolve a GitHub username for docker login — set GITHUB_ACTOR'); process.exit(1); }
   console.log(`Logging in to ${GHCR_HOST}...`);

@@ -4,10 +4,39 @@ import { join } from 'node:path';
 
 const IS_WIN = process.platform === 'win32';
 
+/** Arg names whose value is a secret when passed as `NAME=value` (docker `--build-arg`, env
+ *  assignments...). Matched loosely: a token can be called GITHUB_TOKEN, GH_PAT, CF_DNS_API_TOKEN... */
+const SECRET_NAME = /(TOKEN|SECRET|PASSWORD|PASSWD|_PAT|^PAT|APIKEY|API_KEY|CREDENTIAL|PRIVATE_KEY)/i;
+
+/** Literal secret values registered by callers, masked wherever they appear in an echoed command. */
+const knownSecrets = new Set();
+
+/** Register a resolved secret so `run`'s echo never prints it, whatever arg carries it. Callers
+ *  that read a token out of the env (or `gh auth token`) should call this as soon as they have it —
+ *  SECRET_NAME only catches secrets that happen to travel under a self-describing name. */
+export function registerSecret(value) {
+  if (typeof value === 'string' && value.trim().length >= 8) knownSecrets.add(value.trim());
+}
+
+/** The command line as it gets echoed, with secrets masked. Echoing the raw argv leaks any token
+ *  passed inline (e.g. `--build-arg GITHUB_TOKEN=gho_...`) into build logs, terminal scrollback and
+ *  CI output, where it long outlives the run. */
+export function redactCommand(args) {
+  return args
+    .map(arg => {
+      const i = arg.indexOf('=');
+      const masked = i > 0 && SECRET_NAME.test(arg.slice(0, i)) ? `${arg.slice(0, i)}=***` : arg;
+      let out = masked;
+      for (const secret of knownSecrets) if (out.includes(secret)) out = out.split(secret).join('***');
+      return out;
+    })
+    .join(' ');
+}
+
 /** Run a command with inherited stdio. Exits on failure. */
 export function run(args, opts = {}) {
   const [bin, ...rest] = args;
-  console.log(`$ ${[bin, ...rest].join(' ')}`);
+  console.log(`$ ${redactCommand([bin, ...rest])}`);
   const { input, ...spawnOpts } = opts;
   const stdio = input !== undefined ? ['pipe', 'inherit', 'inherit'] : 'inherit';
   const r = spawnSync(bin, rest, { stdio, input, shell: IS_WIN, ...spawnOpts });

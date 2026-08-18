@@ -1,4 +1,4 @@
-import { run, capture } from '../../shared/utils.mjs';
+import { run, capture, registerSecret } from '../../shared/utils.mjs';
 
 export function parseNamespace(remote) {
   const m = remote.match(/gitlab\.com[:/](.+)\/[^/]+$/);
@@ -9,6 +9,7 @@ export function parseNamespace(remote) {
 export function dockerLogin() {
   const token = process.env.GITLAB_PAT;
   if (!token) { console.error('GITLAB_PAT missing — set a GitLab PAT with read_registry/write_registry scopes'); process.exit(1); }
+  registerSecret(token);
   console.log('Logging in to registry.gitlab.com...');
   run(['docker', 'login', 'registry.gitlab.com', '-u', 'oauth2', '--password-stdin'], { input: token + '\n' });
 }
