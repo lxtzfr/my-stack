@@ -1,0 +1,13 @@
+{
+  "name": "com.lxtzfr.my-stack-unity",
+  "version": "0.1.0",
+  "displayName": "my-stack — Unity",
+  "description": "Install/update tooling for Unity projects: canonical .gitattributes (LFS filters, unityyamlmerge) and .gitignore baseline shared across projects. No runtime C# yet.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lxtzfr/my-stack.git",
+    "directory": "unity"
+  }
+}

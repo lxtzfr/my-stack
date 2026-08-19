@@ -36,16 +36,8 @@ Re-run `sync-conventions.mjs` manually with `npx my-stack-sync-conventions`. Eac
 individually) is delimited by its own start/end markers, so re-running is
 idempotent and only touches its own block.
 
-`unity` has no `package.json`/npm install step to add a devDependency to
-(see its own README), so it's still on an older, generated-copy approach:
-`sync-conventions.template.mjs` is the kit-name-parameterized template,
-and
-
-```sh
-node core/sync-to-kits.mjs
-```
-
-overwrites `unity/scripts/sync-conventions.mjs` with a fresh,
-self-contained copy (package name substituted in) after editing the
-template. This will go away once unity has its own way to pull in real
-tooling.
+`unity` has no npm `postinstall` step to hang a real `@lxtzfr/my-stack-core`
+dependency off of (it's a UPM package, not an npm one), so it ships its
+own bespoke, self-contained `unity/scripts/sync-conventions.mjs` instead
+of depending on this package — a consumer runs it by hand after adding
+the UPM dependency. See [`unity/README.md`](../unity/README.md).

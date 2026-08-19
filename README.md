@@ -15,8 +15,9 @@ is about: every kit is generic plumbing you configure, not a framework.
   Zod validation pipe).
 - [`react-native/`](react-native) — `@lxtzfr/my-stack-react-native`: not
   built yet.
-- [`unity/`](unity) — not built yet, not an npm package (see its own
-  README for why).
+- [`unity/`](unity) — `com.lxtzfr.my-stack-unity`: install/update tooling
+  for Unity projects (canonical `.gitattributes`/`.gitignore`, LFS setup).
+  Not an npm package — see its own README for why. No runtime C# yet.
 
 Each kit has its own README with what's actually in it and how to install
 it — this file only covers what's shared across all of them.
@@ -60,15 +61,15 @@ See [`claude/README.md`](claude/README.md).
 
 ## Shared tooling
 
-[`core/`](core) holds tooling shared across kits — the install/update
-conventions sync (a pointer into the consuming project's `CLAUDE.md` per
-installed kit, a `.gitattributes` line-ending rule, and Git LFS tracking
-rules). It's a **devDependency of the consuming project**, not of any
-kit — kits stay plain runtime packages, and `@lxtzfr/my-stack-core`
-detects which kits are installed by reading the consumer's own
-`package.json`. `unity`, which has no npm install step, still uses a
-generated per-kit copy — see [`core/README.md`](core/README.md) for both
-mechanisms.
+[`core/`](core) holds tooling shared across the npm-based kits — the
+install/update conventions sync (a pointer into the consuming project's
+`CLAUDE.md` per installed kit, a `.gitattributes` line-ending rule, and
+Git LFS tracking rules). It's a **devDependency of the consuming
+project**, not of any kit — kits stay plain runtime packages, and
+`@lxtzfr/my-stack-core` detects which kits are installed by reading the
+consumer's own `package.json`. `unity`, which has no npm install step,
+ships its own bespoke sync script instead — see
+[`core/README.md`](core/README.md) and [`unity/README.md`](unity/README.md).
 
 ## Workspace
 
