@@ -1,5 +1,5 @@
 {
-  "name": "com.lxtzfr.my-stack-unity",
+  "name": "fr.lxtz.my-stack-unity",
   "version": "0.1.0",
   "displayName": "my-stack — Unity",
   "description": "Install/update tooling for Unity projects: canonical .gitattributes (LFS filters, unityyamlmerge) and .gitignore baseline shared across projects. No runtime C# yet.",

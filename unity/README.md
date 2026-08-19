@@ -1,4 +1,4 @@
-# com.lxtzfr.my-stack-unity
+# fr.lxtz.my-stack-unity
 
 Install/update tooling for Unity projects — a canonical `.gitattributes`
 (LFS filters for 3D/audio/video/image binaries, the `unityyamlmerge`
@@ -36,7 +36,7 @@ Add to the consuming Unity project's `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.lxtzfr.my-stack-unity": "https://github.com/lxtzfr/my-stack.git?path=unity#main"
+    "fr.lxtz.my-stack-unity": "https://github.com/lxtzfr/my-stack.git?path=unity#main"
   }
 }
 ```
@@ -50,11 +50,11 @@ Then, from the consuming project's root (once, and again any time you
 want to pick up a template change):
 
 ```sh
-node Packages/com.lxtzfr.my-stack-unity/scripts/sync-conventions.mjs
+node Packages/fr.lxtz.my-stack-unity/scripts/sync-conventions.mjs
 ```
 
 (Path depends on how Unity resolved the git dependency — under
-`Library/PackageCache/com.lxtzfr.my-stack-unity@<hash>/` for a plain git
+`Library/PackageCache/fr.lxtz.my-stack-unity@<hash>/` for a plain git
 dependency, or `Packages/my-stack-unity/` if embedded via **Package
 Manager → ... → Embed**.) Unlike the npm kits, nothing runs this
 automatically — Unity/UPM has no `postinstall` equivalent.

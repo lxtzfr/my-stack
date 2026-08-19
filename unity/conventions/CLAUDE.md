@@ -1,6 +1,6 @@
 ## Not much here yet
 
-`com.lxtzfr.my-stack-unity` currently only ships install/update tooling
+`fr.lxtz.my-stack-unity` currently only ships install/update tooling
 (canonical `.gitattributes`/`.gitignore`, LFS setup — see the package
 README) — no shared C# conventions or runtime code yet.
 
@@ -12,5 +12,5 @@ layout, naming, what's generic vs. project-specific.
 ## Keep this file itself concise
 
 This block is synced into every project depending on
-`com.lxtzfr.my-stack-unity` — trim before adding. Prefer editing or
+`fr.lxtz.my-stack-unity` — trim before adding. Prefer editing or
 replacing a point over appending a new one.

@@ -15,7 +15,7 @@ is about: every kit is generic plumbing you configure, not a framework.
   Zod validation pipe).
 - [`react-native/`](react-native) — `@lxtzfr/my-stack-react-native`: not
   built yet.
-- [`unity/`](unity) — `com.lxtzfr.my-stack-unity`: install/update tooling
+- [`unity/`](unity) — `fr.lxtz.my-stack-unity`: install/update tooling
   for Unity projects (canonical `.gitattributes`/`.gitignore`, LFS setup).
   Not an npm package — see its own README for why. No runtime C# yet.
 

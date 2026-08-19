@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Injects/updates com.lxtzfr.my-stack-unity's managed blocks into the *consuming*
+// Injects/updates fr.lxtz.my-stack-unity's managed blocks into the *consuming*
 // Unity project: a CLAUDE.md conventions pointer, the canonical Unity
 // .gitattributes ruleset (LFS filters for 3D/audio/video/image binaries, the
 // unityyamlmerge driver, csharp diffing, ...), and a common Unity .gitignore
@@ -11,9 +11,9 @@
 // Unlike the npm-based kits (tanstack, nestjs), Unity has no
 // postinstall/lifecycle hook — a consumer runs this by hand after adding the
 // package to Packages/manifest.json:
-//   node Packages/com.lxtzfr.my-stack-unity/scripts/sync-conventions.mjs
+//   node Packages/fr.lxtz.my-stack-unity/scripts/sync-conventions.mjs
 // (path depends on whether the package was added as a git dependency —
-// resolves under Library/PackageCache/com.lxtzfr.my-stack-unity@<hash> — or
+// resolves under Library/PackageCache/fr.lxtz.my-stack-unity@<hash> — or
 // embedded directly under Packages/).
 //
 // Each block is delimited by its own START/END markers so re-running only
@@ -24,11 +24,11 @@ import { join, dirname, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
 
-const KIT_PKG_NAME = 'com.lxtzfr.my-stack-unity'
+const KIT_PKG_NAME = 'fr.lxtz.my-stack-unity'
 const kitRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 // Run from the consuming project's root, e.g.
-// `node Packages/com.lxtzfr.my-stack-unity/scripts/sync-conventions.mjs` from
+// `node Packages/fr.lxtz.my-stack-unity/scripts/sync-conventions.mjs` from
 // the Unity project root — cwd at invocation time is the target.
 const targetRoot = process.cwd()
 
