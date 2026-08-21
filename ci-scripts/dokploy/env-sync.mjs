@@ -13,6 +13,7 @@
 //
 // Requires DOKPLOY_TOKEN. Env must already be provisioned (see setup-env.mjs).
 // Usage: node dokploy/env-sync.mjs <service> <env>
+import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dokploy } from './dokploy.mjs';
 import { loadConfig } from '../shared/config.mjs';
@@ -61,7 +62,7 @@ export async function syncEnv(service, env, { required = false } = {}) {
     if (pg) db = await dokploy.postgresOne(pg.postgresId);
   }
 
-  const desiredEnv = svc.envVars(env, { db, randomUUID: crypto.randomUUID });
+  const desiredEnv = svc.envVars(env, { db, randomUUID });
   const current = await dokploy.composeOne(compose.composeId);
   if (current.env === desiredEnv) return false;
 

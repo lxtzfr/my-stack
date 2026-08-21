@@ -133,10 +133,16 @@ export default {
         composeFile: 'server/docker-compose.yml',
         port: 3001,
         domainHost: (host) => `api.${host}`,
+        // Keep values here stable across calls — `build` runs this on every invocation (via
+        // dokploy-env-sync, not just at first provisioning) and pushes+redeploys whatever doesn't
+        // match what's already live in Dokploy. `ctx.randomUUID()` inline would "drift" (and
+        // rotate the secret, invalidating every live session) on every single build; generate it
+        // once and read it from ci-scripts/.env instead — ctx.randomUUID is only safe for a value
+        // truly meant to change on every call (rare).
         envVars: (env, ctx) => [
           `APP_ENV=${env}`,
           `SERVER_DATABASE_URL=postgresql://${ctx.db.databaseUser}:${ctx.db.databasePassword}@${ctx.db.appName}:5432/${ctx.db.databaseName}`,
-          `SERVER_SECRET=${ctx.randomUUID()}`,
+          `SERVER_SECRET=${process.env.SERVER_SECRET}`,
         ].join('\n'),
       },
       {
