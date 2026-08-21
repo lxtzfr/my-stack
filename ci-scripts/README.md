@@ -26,9 +26,7 @@ for every service.
 ## Install
 
 ```bash
-pnpm add -D github:lxtzfr/ci-scripts
-# or, pinned to a tagged version:
-pnpm add -D github:lxtzfr/ci-scripts#v2026.7.31-14.32
+pnpm add -D github:lxtzfr/my-stack#path:ci-scripts
 ```
 
 ## Quick start

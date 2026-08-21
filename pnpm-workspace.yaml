@@ -3,3 +3,4 @@ packages:
   - nestjs
   - react-native
   - core
+  - ci-scripts

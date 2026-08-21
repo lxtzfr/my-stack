@@ -1,17 +1,18 @@
 {
-  "name": "@lxtzfr/ci-scripts",
+  "name": "@lxtzfr/my-stack-ci-scripts",
   "version": "0.1.0",
   "description": "Config-driven bump / build / push / deploy toolkit (git + GitLab/GitHub registry + Dokploy)",
   "type": "module",
   "license": "MIT",
   "author": "Alexandre Wurtz",
-  "homepage": "https://github.com/lxtzfr/ci-scripts#readme",
+  "homepage": "https://github.com/lxtzfr/my-stack/tree/main/ci-scripts#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lxtzfr/ci-scripts.git"
+    "url": "git+https://github.com/lxtzfr/my-stack.git",
+    "directory": "ci-scripts"
   },
   "bugs": {
-    "url": "https://github.com/lxtzfr/ci-scripts/issues"
+    "url": "https://github.com/lxtzfr/my-stack/issues"
   },
   "engines": {
     "node": ">=20"

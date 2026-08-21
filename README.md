@@ -43,13 +43,22 @@ below for what it sets up and keeps up to date.
   consumers depend on a subdirectory of this repo directly, e.g.
   `"@lxtzfr/my-stack-tanstack": "github:lxtzfr/my-stack#path:tanstack"`.
 
+## Tools
+
+Transverse packages that aren't tied to one ecosystem, so they don't fit
+the "one kit, one ecosystem" rule above — but stay in this workspace
+because they're plumbing every consumer can reuse regardless of which
+kits it installs:
+
+- [`ci-scripts/`](ci-scripts) — `@lxtzfr/my-stack-ci-scripts`: config-driven
+  bump / build / push / deploy toolkit shipping to Dokploy. See its own
+  README for commands and setup.
+
 ## Related repos
 
-Not part of this workspace (they're cross-cutting, not tied to one
-ecosystem, so they stay as their own repos rather than a kit folder here):
+Not part of this workspace (they're cross-cutting too, but stay as their
+own repo rather than joining this workspace):
 
-- [`lxtzfr/ci-scripts`](https://github.com/lxtzfr/ci-scripts) — shared CI
-  scripts.
 - [`lxtzfr/brand-img-gen`](https://github.com/lxtzfr/brand-img-gen) — brand
   image generation.
 

@@ -8,6 +8,8 @@ importers:
 
   .: {}
 
+  ci-scripts: {}
+
   core: {}
 
   nestjs:
