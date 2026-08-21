@@ -1,0 +1,31 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntax-check every script
+        run: |
+          find bin build dokploy shared -name '*.mjs' -print0 \
+            | xargs -0 -n1 node --check
+
+      - name: CLI smoke test (unknown command exits 1 with usage)
+        run: |
+          set +e
+          node bin/ci-scripts.mjs 2>output.txt
+          status=$?
+          set -e
+          cat output.txt
+          [ "$status" -eq 1 ]
+          grep -q "Usage: ci-scripts" output.txt
