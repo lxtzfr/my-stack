@@ -65,17 +65,21 @@ avoid wasting CPU on encoding that isn't worth it:
 
 ```yaml
 labels:
-  - traefik.http.middlewares.<service>-compress.compress=true
-  - traefik.http.middlewares.<service>-compress.compress.encodings=gzip
+  # Name is project-prefixed, not just the service name ("web") -- Traefik's docker
+  # provider is host-wide across every project sharing the box. A bare "web-compress"
+  # collided with another project's identically-named middleware on the same VPS and
+  # Traefik dropped BOTH definitions, breaking routing entirely until renamed.
+  - traefik.http.middlewares.<project>-<service>-compress.compress=true
+  - traefik.http.middlewares.<project>-<service>-compress.compress.encodings=gzip
   # brotli compresses a few % smaller but costs meaningfully more CPU per
   # request than gzip at equivalent settings — only add `br` back once
   # you've confirmed headroom under real traffic.
-  - traefik.http.middlewares.<service>-compress.compress.minResponseBodyBytes=1024
+  - traefik.http.middlewares.<project>-<service>-compress.compress.minResponseBodyBytes=1024
   # skip encoding tiny responses -- the CPU spent compressing them costs
   # more than the bytes saved.
 ```
 
-Then attach `<service>-compress` to the domain via Dokploy's
+Then attach `<project>-<service>-compress` to the domain via Dokploy's
 `domain.create`/`domain.update` `middlewares` field — the label only
 *defines* the middleware, the domain is what wires it onto the router.
 
