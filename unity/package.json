@@ -2,7 +2,7 @@
   "name": "fr.lxtz.my-stack-unity",
   "version": "0.1.0",
   "displayName": "my-stack — Unity",
-  "description": "Install/update tooling for Unity projects: canonical .gitattributes (LFS filters, unityyamlmerge) and .gitignore baseline shared across projects. No runtime C# yet.",
+  "description": "Install/update tooling for Unity projects: canonical .gitattributes (LFS filters, unityyamlmerge) and .gitignore baseline shared across projects, plus a dockerized OpenAPI-to-C#-client generator. No runtime C# yet.",
   "unity": "6000.0",
   "license": "MIT",
   "repository": {
