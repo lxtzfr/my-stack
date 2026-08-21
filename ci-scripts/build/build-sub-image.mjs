@@ -54,7 +54,10 @@ function hashDir(d) {
 }
 const contentHash = hashDir(dir).slice(0, 10);
 
-const project = sub.parentService;
+// docker-registry.mjs's `project` param is a checkout dir relative to workspaceRoot — resolve the
+// parent service's own `dir` override (e.g. '.' for a single-repo project) rather than assuming
+// its services-map key doubles as its checkout dir.
+const project = services[sub.parentService]?.dir ?? sub.parentService;
 const imagePath = `${sub.parentService}/${name}/${env}`;
 const versionTag = env;
 

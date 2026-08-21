@@ -8,14 +8,20 @@ const { workspaceRoot: WORKSPACE_ROOT } = await loadConfig();
 
 const PROVIDERS = { gitlab, github };
 
-/** Detects the registry provider + namespace (group/owner) from `project`'s own git remote host —
- *  no config needed, so one project's repo can live on GitLab while another lives on GitHub. */
-export function resolveRegistry(project) {
-  const remote = capture(['git', '-C', join(WORKSPACE_ROOT, project), 'remote', 'get-url', 'origin']);
+/** Detects the registry provider + namespace (group/owner) from the git remote of the repo
+ *  checked out at `<WORKSPACE_ROOT>/<dir>` — no config needed, so one project's repo can live on
+ *  GitLab while another lives on GitHub. `dir` is a filesystem path relative to WORKSPACE_ROOT
+ *  (e.g. '.' for a single-repo project) — NOT a services-map key or a display name; callers that
+ *  only have a service/sub-image name must resolve it to `services[name]?.dir ?? name` first. Also
+ *  returns `repoName`, the repo's own name parsed straight from its remote — distinct from `dir`
+ *  (which can be `.`) and required by GitLab's project-scoped registry API. */
+export function resolveRegistry(dir) {
+  const remote = capture(['git', '-C', join(WORKSPACE_ROOT, dir), 'remote', 'get-url', 'origin']);
   const provider = /github\.com/.test(remote) ? 'github' : /gitlab\.com/.test(remote) ? 'gitlab' : null;
   if (!provider) throw new Error(`Cannot detect a supported registry provider (gitlab.com or github.com) from remote: ${remote}`);
   const impl = PROVIDERS[provider];
-  return { provider, namespace: impl.parseNamespace(remote), impl };
+  const repoName = remote.replace(/\.git$/, '').split(/[:/]/).pop();
+  return { provider, namespace: impl.parseNamespace(remote), repoName, impl };
 }
 
 export function resolveDockerNamespace(project) {
@@ -27,11 +33,12 @@ export function dockerLogin(project) {
 }
 
 /** All tag names currently pushed at `imagePath` under `project`'s registry (empty array if it
- *  doesn't exist yet). `project` is the repo whose remote determines provider/namespace/API access
- *  — pass it explicitly when a sub-image is pushed to a nested path under another repo's registry. */
+ *  doesn't exist yet). `project` is the checkout dir (relative to workspaceRoot) whose remote
+ *  determines provider/namespace/API access — pass it explicitly when a sub-image is pushed to a
+ *  nested path under another repo's registry. */
 export function listImageTags({ project, imagePath }) {
-  const { namespace, impl } = resolveRegistry(project);
-  return impl.listImageTags({ namespace, project, imagePath });
+  const { namespace, repoName, impl } = resolveRegistry(project);
+  return impl.listImageTags({ namespace, project: repoName, imagePath });
 }
 
 /** versionTag (human, e.g. 2026.7.15-19.17-dev) drives the app-visible BUILD_VERSION label;
@@ -46,6 +53,6 @@ export function dockerBuildPush({ project, env, versionTag, registryTag = versio
 }
 
 export function cleanupOldTags({ project, imagePath }) {
-  const { namespace, impl } = resolveRegistry(project);
-  impl.cleanupOldTags({ namespace, project, imagePath });
+  const { namespace, repoName, impl } = resolveRegistry(project);
+  impl.cleanupOldTags({ namespace, project: repoName, imagePath });
 }
