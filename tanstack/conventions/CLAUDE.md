@@ -56,6 +56,29 @@ natively-spawned `node.exe` — use `Stop-Process -Id <pid>` (PowerShell)
 instead. Stop it explicitly once you're done testing rather than leaving
 it "in case it's needed again."
 
+## Compressing SSR responses (Traefik)
+
+Nitro's `node-server` preset doesn't gzip per-request SSR HTML/API responses
+on its own — pair build-time `compressPublicAssets` (vite.config.ts, static
+assets only) with a Traefik middleware label on the web service, tuned to
+avoid wasting CPU on encoding that isn't worth it:
+
+```yaml
+labels:
+  - traefik.http.middlewares.<service>-compress.compress=true
+  - traefik.http.middlewares.<service>-compress.compress.encodings=gzip
+  # brotli compresses a few % smaller but costs meaningfully more CPU per
+  # request than gzip at equivalent settings — only add `br` back once
+  # you've confirmed headroom under real traffic.
+  - traefik.http.middlewares.<service>-compress.compress.minResponseBodyBytes=1024
+  # skip encoding tiny responses -- the CPU spent compressing them costs
+  # more than the bytes saved.
+```
+
+Then attach `<service>-compress` to the domain via Dokploy's
+`domain.create`/`domain.update` `middlewares` field — the label only
+*defines* the middleware, the domain is what wires it onto the router.
+
 ## Keep this file itself concise
 
 This block is synced into every project depending on kit-web — trim
