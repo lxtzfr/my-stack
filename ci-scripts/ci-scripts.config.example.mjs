@@ -42,6 +42,10 @@ export default {
     unity:  { versionFile: 'unity/package.json' },
     // fixedBranch: no per-env deploys — always bumps to this single branch.
     'unity-asset': { versionFile: 'unity-asset/Assets/Export/package.json', fixedBranch: 'deploy/release' },
+    // looseEnvs: bump this project for 'dev' from whatever branch is currently checked out,
+    // instead of requiring 'main' (still requires it be clean and pushed) — handy for testing a
+    // WIP branch's own deploy before merging. Envs not listed here (stg/prd) still require main.
+    // server: { versionFile: 'server/package.json', looseEnvs: ['dev'] },
   },
 
   // --- `ci-scripts build <service> <env>`: one entry per docker-built service. ---

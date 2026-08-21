@@ -1,9 +1,14 @@
 #!/usr/bin/env node
-// Bumps a project's version, merging main into its deploy branch (creating it the first time)
-// and adding a version bump commit on top, then pushes. Never force-pushes.
+// Bumps a project's version, merging its source branch into its deploy branch (creating it the
+// first time) and adding a version bump commit on top, then pushes. Never force-pushes.
 // Projects and their deploy-branch behavior come from ci-scripts.config.mjs's `bump` map — a
 // project with `fixedBranch` always bumps to that single branch (no env); otherwise it bumps to
-// deploy/<env> for one of config's `envs` (minus 'loc').
+// deploy/<env> for one of config's `envs` (minus 'loc'). The source branch is 'main' by default
+// (requires being on it, in sync with origin/main — a deploy branch only ever cuts from reviewed,
+// shared code) unless `bump[project].looseEnvs` lists this env, in which case it bumps from
+// whatever branch is currently checked out instead — useful for testing a WIP branch's own deploy
+// (e.g. dev) without merging to main first. Still requires that branch to be clean and in sync
+// with its own origin tracking branch.
 // Usage: node build/bump-version.mjs [project] [env]   (env prompted/ignored for fixedBranch projects)
 import { resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -69,19 +74,25 @@ function git(args) {
   return execFileSync('git', args, { cwd: repoDir, encoding: 'utf8' }).trim()
 }
 
-// --- Pre-flight checks on main ---
+// --- Pre-flight checks on the source branch ---
 if (git(['status', '--porcelain'])) {
   fail('Working tree is not clean. Commit or stash changes before bumping the version.')
 }
 
-const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'])
-if (branch !== 'main') {
-  fail(`Must be on 'main' to bump the version (currently on '${branch}').`)
+// fixedBranch projects (no per-env deploy cycle) always require main. Otherwise, an env listed in
+// `looseEnvs` bumps from whatever's currently checked out instead of requiring main.
+const looseEnvs = projects[project].looseEnvs ?? []
+const strict = fixedBranch != null || !looseEnvs.includes(env)
+const currentBranch = git(['rev-parse', '--abbrev-ref', 'HEAD'])
+const sourceBranch = strict ? 'main' : currentBranch
+
+if (currentBranch !== sourceBranch) {
+  fail(`Must be on '${sourceBranch}' to bump the version (currently on '${currentBranch}').`)
 }
 
-git(['fetch', 'origin', 'main'])
-if (git(['rev-parse', 'main']) !== git(['rev-parse', 'origin/main'])) {
-  fail("Local 'main' is out of sync with 'origin/main'. Push/pull before bumping.")
+git(['fetch', 'origin', sourceBranch])
+if (git(['rev-parse', sourceBranch]) !== git(['rev-parse', `origin/${sourceBranch}`])) {
+  fail(`Local '${sourceBranch}' is out of sync with 'origin/${sourceBranch}'. Push/pull before bumping.`)
 }
 
 // --- Already-bumped guard ---
@@ -93,15 +104,15 @@ try {
 }
 
 if (deployBranchExistsRemotely) {
-  let mainAlreadyPublished = false
+  let sourceAlreadyPublished = false
   try {
-    git(['merge-base', '--is-ancestor', 'main', `origin/${deployBranch}`])
-    mainAlreadyPublished = true
+    git(['merge-base', '--is-ancestor', sourceBranch, `origin/${deployBranch}`])
+    sourceAlreadyPublished = true
   } catch {
-    mainAlreadyPublished = false
+    sourceAlreadyPublished = false
   }
-  if (mainAlreadyPublished) {
-    skip(`Nothing changed on main since the last bump of '${env ? `${project}/${env}` : project}' — skipping.`)
+  if (sourceAlreadyPublished) {
+    skip(`Nothing changed on '${sourceBranch}' since the last bump of '${env ? `${project}/${env}` : project}' — skipping.`)
   }
 }
 
@@ -111,23 +122,23 @@ const datePart = `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}` // semv
 const timePart = `${d.getHours()}.${d.getMinutes()}` // pre-release, no leading zeros
 const newVersion = `${datePart}-${timePart}`
 
-// --- Bring deploy/<env> up to date with main (merge, never force-push) ---
+// --- Bring deploy/<env> up to date with the source branch (merge, never force-push) ---
 if (deployBranchExistsRemotely) {
   git(['checkout', '-B', deployBranch, `origin/${deployBranch}`])
   try {
-    git(['merge', '--no-ff', 'main', '-m', `Merge main into ${deployBranch}`])
+    git(['merge', '--no-ff', sourceBranch, '-m', `Merge ${sourceBranch} into ${deployBranch}`])
   } catch (err) {
     git(['merge', '--abort'])
-    git(['checkout', 'main'])
-    fail(`Conflict merging main into ${deployBranch} — resolve manually.\n${err.message}`)
+    git(['checkout', sourceBranch])
+    fail(`Conflict merging ${sourceBranch} into ${deployBranch} — resolve manually.\n${err.message}`)
   }
 } else {
-  git(['checkout', '-b', deployBranch, 'main'])
+  git(['checkout', '-b', deployBranch, sourceBranch])
 }
 
 const pkg = JSON.parse(readFileSync(versionFilePath, 'utf8'))
 if (newVersion === pkg.version) {
-  git(['checkout', 'main'])
+  git(['checkout', sourceBranch])
   fail(`Version unchanged (${newVersion}) — try again in the next minute.`)
 }
 
@@ -138,6 +149,6 @@ git(['add', versionFilePath])
 git(['commit', '-m', env ? `Bump ${project} to ${newVersion} [${env}]` : `Bump ${project} to ${newVersion}`])
 git(deployBranchExistsRemotely ? ['push', 'origin', deployBranch] : ['push', '-u', 'origin', deployBranch])
 
-git(['checkout', 'main'])
+git(['checkout', sourceBranch])
 
 log.done(`bumped to ${newVersion}, pushed '${deployBranch}'`)
