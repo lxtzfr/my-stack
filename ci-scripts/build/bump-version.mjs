@@ -13,7 +13,7 @@ import { makeLogger } from '../shared/log.mjs'
 import { loadConfig } from '../shared/config.mjs'
 
 const config = await loadConfig()
-const { workspaceRoot, bump: projects, envs } = config
+const { workspaceRoot, bump: projects, envs, services = {} } = config
 if (!projects) { console.error('No `bump` map in ci-scripts.config.mjs'); process.exit(1) }
 const deployEnvs = Object.keys(envs).filter(e => e !== 'loc')
 
@@ -58,7 +58,10 @@ const env = fixedBranch ? null : await resolveArg(process.argv, 3, deployEnvs, '
 log = makeLogger(project, env)
 log.step('Starting bump')
 
-const repoDir = resolve(workspaceRoot, project)
+// `project` is the bump map key, which defaults to being the checkout dir too (the multi-repo
+// convention) — but a single-repo project (`services[project].dir: '.'`) needs that override
+// respected here as well, or this resolves to a nonexistent `<workspaceRoot>/<project>` subdir.
+const repoDir = resolve(workspaceRoot, services[project]?.dir ?? project)
 const versionFilePath = resolve(workspaceRoot, projects[project].versionFile)
 const deployBranch = fixedBranch ?? `deploy/${env}`
 
