@@ -19,6 +19,7 @@ export async function buildAndDeployDockerService({
   service, dir = service, env, workspaceRoot, configDir = workspaceRoot, log, versionTag, webhookUrl,
   runBuild,          // () => void — runs the actual pre-build steps + `pnpm build` for this service
   dockerBuildArgs = {},
+  dockerSsh,         // forwarded to `docker buildx build --ssh`, see build-service.mjs
   dockerfilePath,    // absolute path, defaults to <workspaceRoot>/<dir>/Dockerfile
   contextDir,        // absolute path, defaults to workspaceRoot
   composeFilePath,   // relative to workspaceRoot, defaults to <dir>/docker-compose.yml
@@ -44,7 +45,7 @@ export async function buildAndDeployDockerService({
     runBuild();
 
     dockerLogin(dir);
-    dockerBuildPush({ project: dir, env, versionTag, registryTag, buildArgs: dockerBuildArgs, imagePath, dockerfilePath, contextDir });
+    dockerBuildPush({ project: dir, env, versionTag, registryTag, buildArgs: dockerBuildArgs, ssh: dockerSsh, imagePath, dockerfilePath, contextDir });
     cleanupOldTags({ project: dir, imagePath });
     log.step(`Built and pushed ${registryTag} (+ latest).`);
   }

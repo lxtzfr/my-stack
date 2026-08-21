@@ -25,7 +25,7 @@ export function listImageTags({ namespace, project, imagePath }) {
   return tags.map(t => t.name);
 }
 
-export function dockerBuildPush({ namespace, env, versionTag, registryTag = versionTag, buildArgs = {}, imagePath, dockerfilePath, contextDir }) {
+export function dockerBuildPush({ namespace, env, versionTag, registryTag = versionTag, buildArgs = {}, ssh, imagePath, dockerfilePath, contextDir }) {
   const imageName = `${namespace}/${imagePath}`;
   const latest    = `registry.gitlab.com/${imageName}:latest`;
   const dated     = `registry.gitlab.com/${imageName}:${registryTag}`;
@@ -38,6 +38,9 @@ export function dockerBuildPush({ namespace, env, versionTag, registryTag = vers
     '--no-cache',
     '--progress', 'quiet', // still surfaces errors, just drops the (huge) per-layer progress log
     '--push',
+    // Forwards an SSH key/agent into a `RUN --mount=type=ssh` build step (e.g. `npm install`
+    // fetching a private git-hosted dependency) — never baked into any image layer.
+    ...(ssh ? ['--ssh', ssh] : []),
     '--label', `org.opencontainers.image.source=https://gitlab.com/${imageName}`,
     '--label', `org.opencontainers.image.version=${versionTag}`,
     '--build-arg', `BUILD_VERSION=${versionTag}`,

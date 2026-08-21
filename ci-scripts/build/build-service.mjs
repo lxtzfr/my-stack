@@ -64,6 +64,10 @@ await buildAndDeployDockerService({
   webhookUrl: svc.webhooks?.[env],
   verify: (env, versionTag) => verifyServiceDeploy(service, env, versionTag),
   dockerBuildArgs: svc.dockerBuildArgs?.(env, config) ?? {},
+  // Forwarded straight to `docker buildx build --ssh`, e.g. 'default' (agent) or
+  // 'default=/path/to/key' (raw key file, no agent needed) — for a Dockerfile whose build needs
+  // to fetch a private git-hosted dependency (see ci-scripts.config.example.mjs).
+  dockerSsh: svc.dockerSsh,
   // Override when the Dockerfile/docker-compose.yml don't live at their <dir>-relative default
   // (e.g. grouped under a ci-scripts/ folder instead) — all relative to workspaceRoot.
   dockerfilePath: svc.dockerfilePath ? join(workspaceRoot, svc.dockerfilePath) : undefined,

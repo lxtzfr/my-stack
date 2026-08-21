@@ -45,11 +45,11 @@ export function listImageTags({ project, imagePath }) {
  *  registryTag (versionTag + commit sha suffix) is the actual docker tag pushed, so the commit
  *  identity used for the already-built check lives on the real release tag instead of a separate
  *  marker tag. `dockerfilePath`/`contextDir` default to `<project>/Dockerfile` and the workspace root. */
-export function dockerBuildPush({ project, env, versionTag, registryTag = versionTag, buildArgs = {}, imagePath, dockerfilePath, contextDir }) {
+export function dockerBuildPush({ project, env, versionTag, registryTag = versionTag, buildArgs = {}, ssh, imagePath, dockerfilePath, contextDir }) {
   const { namespace, impl } = resolveRegistry(project);
   const file = dockerfilePath ?? join(WORKSPACE_ROOT, project, 'Dockerfile');
   const context = contextDir ?? WORKSPACE_ROOT;
-  return impl.dockerBuildPush({ namespace, env, versionTag, registryTag, buildArgs, imagePath, dockerfilePath: file, contextDir: context });
+  return impl.dockerBuildPush({ namespace, env, versionTag, registryTag, buildArgs, ssh, imagePath, dockerfilePath: file, contextDir: context });
 }
 
 export function cleanupOldTags({ project, imagePath }) {

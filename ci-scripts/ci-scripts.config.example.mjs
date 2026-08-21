@@ -61,6 +61,11 @@ export default {
     server: {
       webhooks: { prd: 'https://dokploy.example.com/api/deploy/compose/xxx', stg: '...', dev: '...' },
       healthUrl: (env, cfg) => `${cfg.envs[env].apiHost}/health`,
+      // Only needed if the Dockerfile itself fetches a private git-hosted dependency (e.g. `npm
+      // install` resolving a `github:org/repo` devDependency) — forwarded to `docker buildx build
+      // --ssh`. 'default' uses a running ssh-agent; 'default=/path/to/key' uses a raw key file
+      // directly, no agent needed (the Dockerfile's own RUN step must itself use `--mount=type=ssh`).
+      // dockerSsh: 'default',
       build: async ({ run, env, versionTag, log }) => {
         log.step('Generating spec...');
         run(['pnpm', '--filter', '@myapp/server', 'generate:spec']);
