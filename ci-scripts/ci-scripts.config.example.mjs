@@ -109,6 +109,7 @@ export default {
     assetBranch: 'deploy/release',
     buildMethod: 'BuildScript.BuildAPK', // static method in your Unity project's build script
     upstream: 'server',
+    looseUpstreamEnvs: ['dev'], // dev builds against server as-is (still must be clean) — see services.<name>.looseUpstreamEnvs
     specGenCommand: ['pnpm', '--filter', '@myapp/server', 'generate:spec'],
     apiClientFreshness: { // optional — skip if you don't generate a client into the Unity project
       lockFile: 'unity/scripts/specs.lock.json',

@@ -27,7 +27,10 @@ const log = makeLogger(bumpProject, env);
 log.step('Starting build');
 
 assertBumped(UNITY_PROJECT, bumpProject, env);
-if (apk.upstream) assertUpstreamReady(join(workspaceRoot, apk.upstream), apk.upstream, env);
+if (apk.upstream) {
+  const loose = (apk.looseUpstreamEnvs ?? []).includes(env);
+  assertUpstreamReady(join(workspaceRoot, apk.upstream), apk.upstream, env, { loose });
+}
 
 if (apk.apiClientFreshness) {
   log.step('Checking generated API clients are up to date...');
