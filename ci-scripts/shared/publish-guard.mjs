@@ -38,9 +38,16 @@ export function assertBumped(repoDir, project, env) {
 // server another service generates a client against) is in a known, reviewable state: either its
 // own deploy/<env> bump commit (same env), or main in sync with origin/main. Always clean.
 // Prevents a downstream build from silently baking in whatever the upstream happens to be checked
-// out to locally (a different env, a WIP branch...).
-export function assertUpstreamReady(repoDir, project, env) {
+// out to locally (a different env, a WIP branch...). Pass `loose: true` (e.g. for a dev env listed
+// in services.<name>.looseUpstreamEnvs) to skip the branch-identity requirement entirely — useful
+// when testing a downstream build against an upstream WIP branch — while still requiring it clean.
+export function assertUpstreamReady(repoDir, project, env, { loose = false } = {}) {
   assertClean(repoDir, project)
+  if (loose) {
+    const branch = git(repoDir, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    console.log(`${project} is ready at '${branch}' (loose check for '${env}' — branch identity not enforced).`);
+    return;
+  }
   const branch = git(repoDir, ['rev-parse', '--abbrev-ref', 'HEAD'])
   if (branch === `deploy/${env}`) {
     const subject = git(repoDir, ['log', '-1', '--format=%s'])

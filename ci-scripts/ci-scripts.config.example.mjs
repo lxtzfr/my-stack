@@ -78,6 +78,9 @@ export default {
       healthUrl: (env, cfg) => `https://${cfg.envs[env].host}/api/health`,
       dockerBuildArgs: (env, cfg) => ({ VITE_HOST: cfg.envs[env].host }),
       upstream: ['server'], // must be deploy/<env>-ready (or main, in sync) before web builds against it
+      // dev can build against server's WIP branch as-is (still must be clean) — stg/prd still
+      // require server to be at a real deploy/<env> bump or in-sync main.
+      looseUpstreamEnvs: ['dev'],
       build: async ({ run, env, versionTag, log, config }) => {
         log.step('Generating spec...');
         run(['pnpm', '--filter', '@myapp/server', 'generate:spec']);

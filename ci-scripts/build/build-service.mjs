@@ -47,8 +47,9 @@ if (bump[service]) {
 } else {
   assertClean(join(workspaceRoot, dir), service);
 }
+const looseUpstream = (svc.looseUpstreamEnvs ?? []).includes(env);
 for (const upstream of svc.upstream ?? []) {
-  assertUpstreamReady(join(workspaceRoot, services[upstream]?.dir ?? upstream), upstream, env);
+  assertUpstreamReady(join(workspaceRoot, services[upstream]?.dir ?? upstream), upstream, env, { loose: looseUpstream });
 }
 
 const versionTag = genVersion(env).pretty;
