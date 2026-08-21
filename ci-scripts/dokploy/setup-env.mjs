@@ -72,6 +72,24 @@ if (dokploySetup.postgres) {
   dbDetails = await dokploy.postgresOne(db.postgresId);
 }
 
+// Ensures every var in `requiredEnvString` (same format `svc.envVars` already returns) is present
+// in an already-existing compose's env, without touching anything else already set there. Only a
+// brand-new compose used to have these seeded — an existing one was never re-checked, so an env var
+// added to `envVars` later (a rotated secret, a new required var) could silently never reach an env
+// that was already provisioned before the change.
+async function backfillEnv(compose, requiredEnvString) {
+  const lines = (compose.env ?? '').split('\n').filter(Boolean);
+  const required = requiredEnvString.split('\n').filter(Boolean).map(line => {
+    const i = line.indexOf('=');
+    return { name: line.slice(0, i), value: line.slice(i + 1) };
+  });
+  const missing = required.filter(({ name }) => !lines.some(l => l.startsWith(`${name}=`)));
+  if (missing.length === 0) return;
+  console.log(`${compose.name}: backfilling missing env var(s): ${missing.map(m => m.name).join(', ')}`);
+  const newEnv = [...lines, ...missing.map(({ name, value }) => `${name}=${value}`)].join('\n');
+  await dokploy.composeSaveEnvironment({ composeId: compose.composeId, env: newEnv });
+}
+
 // Step 3: composes + domains
 const domainBase = {
   https: true,
@@ -113,6 +131,7 @@ for (const svc of dokploySetup.composeServices) {
     });
   } else {
     console.log(`${svc.name} compose already exists — syncing compose file...`);
+    await backfillEnv(compose, svc.envVars(env, { db: dbDetails, randomUUID }));
   }
   const synced = await syncCompose(svc.name, env, svc.composeFile);
   composeResults[svc.name] = { compose, synced };
@@ -206,6 +225,12 @@ if (dokploySetup.wildcard) {
   }
 
   const targetDetails = await dokploy.composeOne(targetCompose.composeId);
+  // A file-provider router referencing a docker-provider middleware needs the "@docker" suffix —
+  // the target service's own domain gets it via domain.create/update's middlewares field above, but
+  // this wildcard router is raw Traefik config, so it needs it spelled out here too. Must stay in
+  // sync with whatever `middlewares` the target's own composeServices entry declares.
+  const targetSvc = dokploySetup.composeServices.find(s => s.name === targetService);
+  const wildcardMiddlewares = (targetSvc?.middlewares ?? []).map(m => `${m}@docker`);
   console.log(`Writing wildcard config for *.${host} -> ${targetDetails.appName}-${targetService}-1:${port}...`);
   const wildcardConfig = `http:
   routers:
@@ -219,7 +244,7 @@ if (dokploySetup.wildcard) {
           - main: "${host}"
             sans:
               - "*.${host}"
-      service: wildcard-${env}-${targetService}
+${wildcardMiddlewares.length ? `      middlewares: [${wildcardMiddlewares.map(m => `"${m}"`).join(', ')}]\n` : ''}      service: wildcard-${env}-${targetService}
   services:
     wildcard-${env}-${targetService}:
       loadBalancer:
