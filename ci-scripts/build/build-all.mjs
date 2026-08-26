@@ -50,8 +50,12 @@ const results = []
 
 // Docker-built services. Those with a matching `bump` entry go through the bump -> checkout
 // deploy/<env> -> build cycle; services with no bump entry build straight off whatever's checked
-// out (typically main) — see build-service.mjs.
+// out (typically main) — see build-service.mjs. Skips stub entries (no `build` function) — some
+// configs declare a `services.<name>` with only a `dir` so another lookup (assertUpstreamReady,
+// bump-version's dir resolution) can find a sibling/self repo without that entry being a real
+// buildable target.
 for (const [service, svc] of Object.entries(services)) {
+  if (typeof svc.build !== 'function') continue
   if (bump[service]) {
     const bumpStatus = runStep(`Bump ${service} [${env}]`, ['node', join(__dirname, 'bump-version.mjs'), service, env])
     if (bumpStatus !== 0 && bumpStatus !== 2) { results.push({ project: service, status: 'FAILED (bump)' }); continue }
