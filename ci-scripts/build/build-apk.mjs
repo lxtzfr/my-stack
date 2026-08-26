@@ -17,7 +17,7 @@ if (!apk) { console.error('No `apk` block in ci-scripts.config.mjs'); process.ex
 
 const bumpProject  = apk.bumpProject ?? 'unity';
 const UNITY_PROJECT = join(workspaceRoot, apk.unityProjectDir);
-const ASSET_PROJECT = join(workspaceRoot, apk.assetProjectDir);
+const ASSET_PROJECT = apk.assetProjectDir ? join(workspaceRoot, apk.assetProjectDir) : null;
 const OUTPUT_DIR    = join(configDir, '.builds');
 const APK_NAME       = apk.fileName;
 
@@ -44,15 +44,20 @@ const REPO_NAME  = unityRemote.replace(/\.git$/, '').split(/[:/]/).pop();
 const PROJECT_ID = resolveProjectId(NAMESPACE, REPO_NAME);
 const PACKAGE    = `${apk.packagePrefix}-${env}`;
 
-// Content-addressed identity: skip the (several-minute) build if this exact unity + asset-project
-// combination was already built for this env. assetProjectDir is pulled in as a UPM git dependency
-// pinned to assetBranch, so it must factor into the identity too. The identity is a suffix on the
-// real published version name (no separate marker) — versionCode isn't known ahead of a real build
-// so the exact version string can't be reconstructed on a retry.
-run(['git', '-C', ASSET_PROJECT, 'fetch', 'origin', apk.assetBranch]);
+// Content-addressed identity: skip the (several-minute) build if this exact unity (+ asset-project,
+// when configured) combination was already built for this env. assetProjectDir is only set when
+// art assets live in a separate repo pulled in as a UPM git dependency pinned to assetBranch — in
+// that case it must factor into the identity too, since its content isn't reflected in unity's own
+// commit. The identity is a suffix on the real published version name (no separate marker) —
+// versionCode isn't known ahead of a real build so the exact version string can't be reconstructed
+// on a retry.
 const unitySha = capture(['git', '-C', UNITY_PROJECT, 'rev-parse', '--short=10', 'HEAD']);
-const assetSha = capture(['git', '-C', ASSET_PROJECT, 'rev-parse', '--short=10', `origin/${apk.assetBranch}`]);
-const buildKey = `${unitySha}-${assetSha}`;
+let buildKey = unitySha;
+if (ASSET_PROJECT) {
+  run(['git', '-C', ASSET_PROJECT, 'fetch', 'origin', apk.assetBranch]);
+  const assetSha = capture(['git', '-C', ASSET_PROJECT, 'rev-parse', '--short=10', `origin/${apk.assetBranch}`]);
+  buildKey = `${unitySha}-${assetSha}`;
+}
 
 const foundVersion = findBySuffix(listPackageVersions({ projectId: PROJECT_ID, packageName: PACKAGE, limit: 20 }), `-${buildKey}`);
 const matchedVersion = force ? undefined : foundVersion;

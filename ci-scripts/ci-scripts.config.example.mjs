@@ -105,8 +105,8 @@ export default {
     fileName: 'myapp.apk',
     packagePrefix: 'unity',            // GitLab generic package = `${packagePrefix}-${env}`
     unityProjectDir: 'unity',
-    assetProjectDir: 'unity-asset',
-    assetBranch: 'deploy/release',
+    assetProjectDir: 'unity-asset', // optional — only if art assets live in a separate repo pulled in as a UPM git dependency
+    assetBranch: 'deploy/release',  // required alongside assetProjectDir; ignored otherwise
     buildMethod: 'BuildScript.BuildAPK', // static method in your Unity project's build script
     upstream: 'server',
     looseUpstreamEnvs: ['dev'], // dev builds against server as-is (still must be clean) — see services.<name>.looseUpstreamEnvs
