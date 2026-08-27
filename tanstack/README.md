@@ -48,6 +48,13 @@ Subpath imports mean you only ever load what you actually import.
   handler factory.
 - **`@lxtzfr/my-stack-tanstack/robots`** — `createRobotsRoute`: a `robots.txt` route handler
   factory.
+- **`@lxtzfr/my-stack-tanstack/locale`** — `createLocaleConfig`: locale-prefix URL helpers
+  for a multi-locale site (default locale unprefixed, e.g. `/modules`; every other locale gets
+  a `/xx` prefix, e.g. `/fr/modules`) — `localizedPath`, `resolveLocaleFromPath`, and
+  `hreflangLinks` for `<link rel="alternate" hreflang="...">` tags. Framework-agnostic (no
+  router import); pair it with your own `$locale` dynamic route segment to actually switch
+  content. Adding a locale later is a content-only change — register it in `locales` and ship
+  translations, no new routes.
 - **`@lxtzfr/my-stack-tanstack/headMeta`** — `buildHeadMeta`: title/description/OG/Twitter
   `<head>` tag builder.
 - **`@lxtzfr/my-stack-tanstack/brandHead`** — `buildBrandHead`: charset/viewport/title/
