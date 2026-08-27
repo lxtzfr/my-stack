@@ -30,7 +30,7 @@ export async function buildAndDeployDockerService({
   const imagePath = `${service}/${env}`;
 
   // Content-addressed identity: if this exact commit was already built for this env, skip the
-  // (slow, --no-cache) rebuild entirely — bump-version.mjs already refuses to bump twice without a
+  // rebuild entirely — bump-version.mjs already refuses to bump twice without a
   // new commit on main, but the build script itself can still be re-run against the same bump
   // commit. The commit sha lives as a suffix on the real pushed tag (no separate marker tag).
   const commitSha = capture(['git', '-C', repoDir, 'rev-parse', '--short=10', 'HEAD']);

@@ -35,7 +35,6 @@ export function dockerBuildPush({ namespace, env, versionTag, registryTag = vers
     'docker', 'buildx', 'build',
     '--platform', 'linux/amd64',
     '--provenance=false',
-    '--no-cache',
     '--progress', 'quiet', // still surfaces errors, just drops the (huge) per-layer progress log
     '--push',
     // Forwards an SSH key/agent into a `RUN --mount=type=ssh` build step (e.g. `npm install`
