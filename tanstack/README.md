@@ -55,6 +55,16 @@ Subpath imports mean you only ever load what you actually import.
   router import); pair it with your own `$locale` dynamic route segment to actually switch
   content. Adding a locale later is a content-only change — register it in `locales` and ship
   translations, no new routes.
+- **`@lxtzfr/my-stack-tanstack/localeCookieRedirect`** — `createLocaleCookieRedirect`: pairs
+  with a `LocaleConfig` from `./locale` to remember an explicit language-switcher choice in a
+  cookie and redirect an unprefixed route back to it on a later visit — `remember(locale)` from
+  the switcher's click handler, `redirectToRemembered(barePath)` from an unprefixed route's
+  `beforeLoad`. Never reads `Accept-Language`; a visitor or crawler with no cookie is never
+  redirected, so it's safe to call from every unprefixed route without risking indexing or
+  first-load UX. Uses `createIsomorphicFn` internally (required, not a `typeof document` check)
+  so `@tanstack/react-start/server`'s `getCookie` never reaches the client bundle — TanStack
+  Start's Vite plugin statically denies that import from client-reachable code regardless of a
+  runtime guard, and fails the build.
 - **`@lxtzfr/my-stack-tanstack/headMeta`** — `buildHeadMeta`: title/description/OG/Twitter
   `<head>` tag builder.
 - **`@lxtzfr/my-stack-tanstack/brandHead`** — `buildBrandHead`: charset/viewport/title/

@@ -1,6 +1,6 @@
 {
   "name": "@lxtzfr/my-stack-tanstack",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Generic multi-domain (or single-domain) site utilities for TanStack Start — llms.txt, sitemap.xml, robots.txt, head meta, site resolution, a dev-only site switcher, plus process-wide plumbing (event bus, data dir, Prisma/SQLite bootstrap).",
   "license": "MIT",
   "type": "module",
@@ -28,6 +28,10 @@
     "./locale": {
       "types": "./dist/locale.d.ts",
       "import": "./dist/locale.js"
+    },
+    "./localeCookieRedirect": {
+      "types": "./dist/localeCookieRedirect.d.ts",
+      "import": "./dist/localeCookieRedirect.js"
     },
     "./robots": {
       "types": "./dist/robots.d.ts",
