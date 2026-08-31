@@ -64,6 +64,10 @@
     "./DevSiteSwitcher": {
       "types": "./dist/DevSiteSwitcher.d.ts",
       "import": "./dist/DevSiteSwitcher.js"
+    },
+    "./device": {
+      "types": "./dist/device.d.ts",
+      "import": "./dist/device.js"
     }
   },
   "files": [
@@ -100,6 +104,9 @@
     "react": {
       "optional": true
     }
+  },
+  "dependencies": {
+    "ua-parser-js": "^2.0.10"
   },
   "devDependencies": {
     "@mantine/core": "^9.5.0",

@@ -97,6 +97,11 @@ Subpath imports mean you only ever load what you actually import.
 
   export const db = createSqlitePrismaClient(PrismaClient, join(RUNTIME_DATA_DIR, 'app.db'))
   ```
+- **`@lxtzfr/my-stack-tanstack/device`** — `parseDevice`: turns a raw
+  `User-Agent` header into a coarse `DeviceType` (`mobile`/`tablet`/
+  `desktop`/`smarttv`/`console`/`wearable`/`embedded`/`xr`/`unknown`) plus a
+  human-readable "Platform · Browser" label, e.g. for a visitor log. Built
+  on `ua-parser-js`.
 
 Each of the four route factories returns a plain
 `{ server: { handlers: { GET } } }` object — pass it straight into
