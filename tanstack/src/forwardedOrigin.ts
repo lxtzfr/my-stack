@@ -15,9 +15,13 @@ export interface ForwardedOrigin {
 }
 
 /** Parses the standard forwarded-proxy headers Traefik sets. First value only — a chain of
- *  proxies would comma-join them, but there's exactly one hop (Traefik -> this container) here. */
+ *  proxies would comma-join them, but there's exactly one hop (Traefik -> this container) here.
+ *  A WebSocket upgrade gets `wss`/`ws` here (matching the scheme the browser actually connected
+ *  with) rather than `https`/`http` — folded into their HTTP equivalents below, since this is
+ *  about whether the underlying connection was actually secure, not literally about HTTP vs WS. */
 export function forwardedOrigin(headers: Headers): ForwardedOrigin {
-  const proto = headers.get('x-forwarded-proto')?.split(',')[0]?.trim()
+  const rawProto = headers.get('x-forwarded-proto')?.split(',')[0]?.trim()
+  const proto = rawProto === 'wss' ? 'https' : rawProto === 'ws' ? 'http' : rawProto
   const host = headers.get('x-forwarded-host')?.split(',')[0]?.trim()
   return { proto: proto === 'http' || proto === 'https' ? proto : undefined, host }
 }
