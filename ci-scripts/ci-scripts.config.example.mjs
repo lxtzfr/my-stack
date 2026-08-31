@@ -22,7 +22,7 @@ export default {
   dokploy: {
     url: 'https://dokploy.example.com',   // or leave unset and export DOKPLOY_URL instead
     projectName: 'MYAPP',                  // Dokploy project name
-    sshHost: 'deploy@203.0.113.10',        // optional, only for `ci-scripts dokploy-seed`
+    sshHost: 'deploy@203.0.113.10',        // optional, for `ci-scripts dokploy-seed`/`dokploy-ssh`/`dokploy-logs`
     seedService: 'server',                 // which compose's container to exec into
     seedCommand: (appName, env) => `sudo docker exec ${appName}-server-1 sh -c 'APP_ENV=${env} node dist/prisma/seed.js'`,
   },

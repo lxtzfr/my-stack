@@ -6,21 +6,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { dokploy } from './dokploy.mjs';
+import { resolveComposeApp } from './resolve-compose.mjs';
 import { loadConfig } from '../shared/config.mjs';
-
-async function resolveEnvironment(env) {
-  const config = await loadConfig();
-  const projectName = config.dokploy?.projectName;
-  if (!projectName) throw new Error('Set `dokploy.projectName` in ci-scripts.config.mjs');
-  const ENV_NAME = env === 'prd' ? 'production' : env;
-  const projects = await dokploy.projectAll();
-  const project = projects.find(p => p.name === projectName);
-  if (!project) throw new Error(`${projectName} project not found`);
-  const environments = await dokploy.environmentByProjectId(project.projectId);
-  const environment = environments.find(e => e.name === ENV_NAME);
-  if (!environment) throw new Error(`Environment "${ENV_NAME}" not found — run setup-env.mjs first`);
-  return environment;
-}
 
 // Polls compose.one until Dokploy's own composeStatus leaves "error"/settles, so a broken deploy
 // (bad image ref, failed pull, ...) surfaces here with an actionable pointer to the real log file
@@ -52,12 +39,9 @@ async function waitForDeployStatus(composeId, appName, { timeoutMs = 60000, inte
 // should always pass it explicitly.
 export async function syncCompose(service, env, composeFilePath = join(service, 'docker-compose.yml')) {
   const config = await loadConfig();
-  const environment = await resolveEnvironment(env);
-  const compose = (environment.compose ?? []).find(c => c.name === `${service}-${env}`);
-  if (!compose) throw new Error(`No ${service}-${env} compose found — run setup-env.mjs first`);
+  const { compose, composeDetail: current } = await resolveComposeApp(service, env);
 
   const composeFile = readFileSync(join(config.workspaceRoot, composeFilePath), 'utf8');
-  const current = await dokploy.composeOne(compose.composeId);
   const drifted = current.composeFile !== composeFile;
 
   if (!drifted && current.composeStatus !== 'error') {

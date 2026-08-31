@@ -16,6 +16,7 @@
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dokploy } from './dokploy.mjs';
+import { resolveComposeApp } from './resolve-compose.mjs';
 import { loadConfig } from '../shared/config.mjs';
 
 /** Returns true if env vars had drifted and were pushed + redeployed, false if already current or
@@ -35,20 +36,11 @@ export async function syncEnv(service, env, { required = false } = {}) {
     return false;
   }
 
-  const ENV_NAME = env === 'prd' ? 'production' : env;
-  const projects = await dokploy.projectAll();
-  const project = projects.find(p => p.name === projectName);
-  if (!project) throw new Error(`${projectName} project not found`);
-  const environments = await dokploy.environmentByProjectId(project.projectId);
-  const environment = environments.find(e => e.name === ENV_NAME);
-  if (!environment) {
-    if (required) throw new Error(`Environment "${ENV_NAME}" not found — run setup-env.mjs first`);
-    return false;
-  }
-
-  const compose = (environment.compose ?? []).find(c => c.name === `${service}-${env}`);
-  if (!compose) {
-    if (required) throw new Error(`No ${service}-${env} compose found — run setup-env.mjs first`);
+  let environment, compose, current;
+  try {
+    ({ environment, compose, composeDetail: current } = await resolveComposeApp(service, env));
+  } catch (error) {
+    if (required) throw error;
     return false;
   }
 
@@ -63,7 +55,6 @@ export async function syncEnv(service, env, { required = false } = {}) {
   }
 
   const desiredEnv = svc.envVars(env, { db, randomUUID });
-  const current = await dokploy.composeOne(compose.composeId);
   if (current.env === desiredEnv) return false;
 
   console.log(`${service}-${env}: env vars drifted from Dokploy — pushing and redeploying...`);

@@ -65,6 +65,8 @@ pnpm add -D github:lxtzfr/my-stack#path:ci-scripts
 | `dokploy-compose-sync <service> <env>` | Pushes the local `docker-compose.yml` to Dokploy if it drifted. |
 | `dokploy-env-sync <service> <env>` | Re-pushes the service's `envVars` values to Dokploy and redeploys. Needed because `setup-env.mjs` only sets them once, at first provisioning — a value changing in `envVars`/`.env` afterwards (a rotated token, a new var) never reaches Dokploy on its own. |
 | `dokploy-seed <env>` | SSHes into the VPS and runs the configured re-seed command. |
+| `dokploy-ssh` | Opens an interactive SSH session to the VPS (`dokploy.sshHost`). |
+| `dokploy-logs <service> <env> [-- docker logs args]` | SSHes into the VPS and runs `docker logs` on the service's running container, resolving the real Dokploy container name automatically. Defaults to `--tail 200`; e.g. `dokploy-logs web prd -- --follow`. |
 
 Add `--force` to `build`/`build-apk`/`build-sub-image`/`build-all` to bypass the "already built"
 skip check.
