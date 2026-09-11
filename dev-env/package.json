@@ -1,0 +1,29 @@
+{
+  "name": "@lxtzfr/my-stack-dev-env",
+  "version": "0.1.0",
+  "description": "Reverse-proxy-based local dev setup: one Traefik instance routing *.localhost hostnames to per-project Docker containers, so no two projects ever fight over a port.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Alexandre Wurtz",
+  "homepage": "https://github.com/lxtzfr/my-stack/tree/main/dev-env#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lxtzfr/my-stack.git",
+    "directory": "dev-env"
+  },
+  "bugs": {
+    "url": "https://github.com/lxtzfr/my-stack/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "dev-env": "bin/dev-env.mjs"
+  },
+  "files": [
+    "bin",
+    "scripts",
+    "templates",
+    "traefik"
+  ]
+}

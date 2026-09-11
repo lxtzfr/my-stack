@@ -53,6 +53,9 @@ kits it installs:
 - [`ci-scripts/`](ci-scripts) — `@lxtzfr/my-stack-ci-scripts`: config-driven
   bump / build / push / deploy toolkit shipping to Dokploy. See its own
   README for commands and setup.
+- [`dev-env/`](dev-env) — `@lxtzfr/my-stack-dev-env`: shared Traefik
+  reverse proxy + per-project Docker dev setup, so local projects never
+  fight over a port and each gets its own `*.localhost` URL.
 
 ## Related repos
 

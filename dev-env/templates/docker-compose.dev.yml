@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - PORT=__PORT__
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.__NAME__.rule=Host(`__NAME__.localhost`)
+      - traefik.http.services.__NAME__.loadbalancer.server.port=__PORT__
+    networks:
+      - dev-env
+
+networks:
+  dev-env:
+    external: true

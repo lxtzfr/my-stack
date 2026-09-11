@@ -1,0 +1,25 @@
+# Generic dev-mode Dockerfile — same base image as prod, but the source is bind-mounted
+# (see docker-compose.dev.yml) instead of COPYed, so file changes reach the framework's own
+# watch mode without a rebuild. Only rebuild when package.json/lockfile changes.
+FROM node:22
+
+WORKDIR /app
+
+# Cached as long as the lockfile doesn't change — this layer is what a rebuild actually redoes.
+# pnpm-workspace.yaml* is included since `pnpm install` needs it present to pick up workspace-level
+# settings (e.g. onlyBuiltDependencies) — without it, native-dependency build scripts silently skip.
+COPY package.json pnpm-workspace.yaml* ./
+COPY package-lock.json* pnpm-lock.yaml* yarn.lock* ./
+RUN \
+  if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm install --frozen-lockfile; \
+  elif [ -f yarn.lock ]; then corepack enable && yarn install --frozen-lockfile; \
+  else npm ci; \
+  fi
+
+# Overwritten at runtime by the bind mount in docker-compose.dev.yml — kept here only so the
+# image is runnable standalone (e.g. `docker build` sanity check) without a mount.
+COPY . .
+
+# Default assumes an npm project with a `start:dev` script — override via the compose file's
+# `command:` for anything else (pnpm/yarn, or a differently named dev/watch script).
+CMD ["npm", "run", "start:dev"]

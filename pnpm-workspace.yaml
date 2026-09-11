@@ -4,3 +4,4 @@ packages:
   - react-native
   - core
   - ci-scripts
+  - dev-env
