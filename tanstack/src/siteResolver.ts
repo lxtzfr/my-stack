@@ -30,7 +30,11 @@ function normalizeDomain(host: string): string {
   return host.split(':')[0].toLowerCase().replace(/^www\./, '')
 }
 
-const LOOPBACK_HOST_RE = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i
+// Matches bare "localhost" and any "*.localhost" subdomain (e.g. a reverse-proxy dev setup
+// routing "myapp.localhost" to a container) — RFC 6761 reserves the whole .localhost TLD to
+// always resolve to loopback, so a subdomain of it carries the same guarantee as the bare form:
+// unspoofable from a remote host.
+const LOOPBACK_HOST_RE = /^(([a-z0-9-]+\.)*localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i
 // The machine running the dev server, reached from another device on the
 // same network — a phone opening http://192.168.1.20:3000 to try the real
 // touch gestures. Loopback alone doesn't cover it, and without this the
