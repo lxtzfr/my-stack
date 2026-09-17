@@ -26,15 +26,11 @@
     "./build/*": "./build/*",
     "./dokploy/*": "./dokploy/*"
   },
-  "scripts": {
-    "prepare": "node scripts/write-commit.mjs"
-  },
   "files": [
     "bin",
     "build",
     "dokploy",
     "shared",
-    "ci-scripts.config.example.mjs",
-    ".commit.json"
+    "ci-scripts.config.example.mjs"
   ]
 }

@@ -1,13 +1,17 @@
-// Best-effort "you're behind main" nudge for the CLI — see scripts/write-commit.mjs for how
-// `.commit.json` (the installed copy's own commit) gets embedded at install time.
+// Best-effort "you're behind main" nudge for the CLI. There's no build/publish step for this
+// package (see package.json) — it's consumed straight from a git commit, resolved by pnpm to
+// `.../tar.gz/<commit>#path:ci-scripts` in the consumer's own pnpm-lock.yaml. That commit is the
+// one reliable signal for "what's actually installed": a prepare script can't capture it instead,
+// because pnpm's `#path:` resolution runs build scripts against an extracted tarball (no `.git`),
+// so `git rev-parse HEAD` there always fails.
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { findWorkspaceRoot } from './config.mjs';
 
-const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url))); // ci-scripts/
 const REPO_URL = 'https://github.com/lxtzfr/my-stack.git';
+const LOCKFILE_ENTRY = /@lxtzfr\/my-stack-ci-scripts@https:\/\/codeload\.github\.com\/lxtzfr\/my-stack\/tar\.gz\/([0-9a-f]{40})#path:ci-scripts/;
 // Global, not per-project: the check is about which commit of the *package* is installed, not
 // about anything project-specific, so every project sharing this machine shares one cache/cooldown
 // instead of each re-checking (and re-notifying) independently.
@@ -15,11 +19,10 @@ const CACHE_FILE = join(homedir(), '.cache', 'lxtzfr-ci-scripts', 'update-check.
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 function installedCommit() {
-  try {
-    return JSON.parse(readFileSync(join(PACKAGE_ROOT, '.commit.json'), 'utf8')).commit;
-  } catch {
-    return null; // no prepare script ever ran here (e.g. running straight out of a my-stack checkout)
-  }
+  const root = findWorkspaceRoot();
+  const lockfile = join(root, 'pnpm-lock.yaml');
+  if (!existsSync(lockfile)) return null;
+  return readFileSync(lockfile, 'utf8').match(LOCKFILE_ENTRY)?.[1] ?? null;
 }
 
 function remoteMainCommit() {
@@ -45,11 +48,12 @@ function writeCache(data) {
   }
 }
 
-/** Prints a one-line notice to stderr when a newer commit than the installed one exists on
- *  `main`. Never throws and never blocks: offline, no git, a broken cache dir, or GitHub being
- *  down all just skip the check silently — this is a convenience nudge, not something any real
- *  command should ever fail or slow down over. Rate-limited to once per CHECK_INTERVAL_MS via a
- *  cache file, so most invocations don't touch the network at all. */
+/** Prints a one-line notice to stderr when the consumer's pnpm-lock.yaml pins an older commit
+ *  than the latest on `main`. Never throws and never blocks: no lockfile, offline, no git, a
+ *  broken cache dir, or GitHub being down all just skip the check silently — this is a
+ *  convenience nudge, not something any real command should ever fail or slow down over.
+ *  Rate-limited to once per CHECK_INTERVAL_MS via a cache file, so most invocations don't touch
+ *  the network at all. */
 export function checkForUpdates() {
   try {
     const installed = installedCommit();
