@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { run, capture, checkoutMain, findBySuffix, printRecap, writeRecap } from '../shared/utils.mjs';
-import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags } from './docker-registry.mjs';
+import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags, resolveRegistry } from './docker-registry.mjs';
 import { hasToken } from '../dokploy/dokploy.mjs';
 import { syncCompose } from '../dokploy/compose-sync.mjs';
 import { syncEnv } from '../dokploy/env-sync.mjs';
@@ -27,7 +27,11 @@ export async function buildAndDeployDockerService({
   force = false,     // bypass the already-built skip check and rebuild/push/deploy regardless
 }) {
   const repoDir = join(workspaceRoot, dir);
-  const imagePath = `${service}/${env}`;
+  // Prefixed with the repo's own name: `service`/`env` alone (e.g. "web/prd") collides across
+  // every repo under the same registry owner that happens to name a service the same way —
+  // this repo's `web/prd` and some other repo's `web/prd` would silently share one GHCR tag.
+  const { repoName } = resolveRegistry(dir);
+  const imagePath = `${repoName}/${service}/${env}`;
 
   // Content-addressed identity: if this exact commit was already built for this env, skip the
   // rebuild entirely — bump-version.mjs already refuses to bump twice without a

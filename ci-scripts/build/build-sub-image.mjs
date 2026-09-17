@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findBySuffix, printRecap, writeRecap } from '../shared/utils.mjs';
-import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags } from './docker-registry.mjs';
+import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags, resolveRegistry } from './docker-registry.mjs';
 import { triggerDeploy } from './docker-service-build.mjs';
 import { loadConfig } from '../shared/config.mjs';
 import { makeLogger } from '../shared/log.mjs';
@@ -58,7 +58,9 @@ const contentHash = hashDir(dir).slice(0, 10);
 // parent service's own `dir` override (e.g. '.' for a single-repo project) rather than assuming
 // its services-map key doubles as its checkout dir.
 const project = services[sub.parentService]?.dir ?? sub.parentService;
-const imagePath = `${sub.parentService}/${name}/${env}`;
+// Prefixed with the repo's own name — see docker-service-build.mjs's imagePath for why.
+const { repoName } = resolveRegistry(project);
+const imagePath = `${repoName}/${sub.parentService}/${name}/${env}`;
 const versionTag = env;
 
 const foundTag = findBySuffix(listImageTags({ project, imagePath }), `-${contentHash}`);
