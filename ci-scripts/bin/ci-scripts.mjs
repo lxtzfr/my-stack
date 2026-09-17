@@ -4,9 +4,12 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { checkForUpdates } from '../shared/update-check.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(__dirname);
+
+checkForUpdates();
 
 const commands = {
   'bump':                 'build/bump-version.mjs',
