@@ -8,7 +8,7 @@
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { findBySuffix, printRecap, writeRecap, readContractVersionAt } from '../shared/utils.mjs';
+import { findBySuffix, printRecap, writeRecap, readContractVersionAt, versionBookkeepingPaths } from '../shared/utils.mjs';
 import { assertContractBumped } from '../shared/publish-guard.mjs';
 import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags, resolveRegistry } from './docker-registry.mjs';
 import { triggerDeploy } from './docker-service-build.mjs';
@@ -81,10 +81,12 @@ const contractVersion = readContractVersionAt(dir, subContract?.versionFile);
 // Scoped to the *parent repo* root (not just sub.dir) — "any change anywhere" means anywhere in
 // that repo, same as a regular service's check, not just under this sub-image's own folder.
 // versionFile has to be re-expressed relative to that root since git diff reports paths that way.
+const parentRepoDir = join(workspaceRoot, project);
 assertContractBumped(
-  join(workspaceRoot, project),
+  parentRepoDir,
   name,
   subContract ? { versionFile: `${sub.dir}/${subContract.versionFile}` } : undefined,
+  versionBookkeepingPaths(config, parentRepoDir),
 );
 
 const foundTag = findBySuffix(listImageTags({ project, imagePath }), `-${contentHash}`);

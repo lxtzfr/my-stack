@@ -4,7 +4,7 @@
 // Usage: node build/build-apk.mjs [env] [--force]
 import { mkdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { run, capture, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap, readContractVersion } from '../shared/utils.mjs';
+import { run, capture, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap, readContractVersion, versionBookkeepingPaths } from '../shared/utils.mjs';
 import { cleanupOldPackages, listPackageVersions, pruneOldPackageFiles } from './gitlab-packages.mjs';
 import { assertBumped, assertUpstreamReady, assertGeneratedClientFresh, assertContractBumped } from '../shared/publish-guard.mjs';
 import { genVersion } from './gen-version.mjs';
@@ -12,7 +12,7 @@ import { loadConfig } from '../shared/config.mjs';
 import { makeLogger } from '../shared/log.mjs';
 
 const config = await loadConfig();
-const { workspaceRoot, configDir, envs, apk, bump = {} } = config;
+const { workspaceRoot, configDir, envs, apk } = config;
 if (!apk) { console.error('No `apk` block in ci-scripts.config.mjs'); process.exit(1); }
 
 const bumpProject  = apk.bumpProject ?? 'unity';
@@ -31,9 +31,7 @@ if (apk.upstream) {
   const loose = (apk.looseUpstreamEnvs ?? []).includes(env);
   assertUpstreamReady(join(workspaceRoot, apk.upstream), apk.upstream, env, { loose });
 }
-// bump[bumpProject].versionFile (e.g. package.json) is rewritten by every `ci-scripts bump` as a
-// mechanical side effect of deploying — not a real content change, so it's excluded here.
-assertContractBumped(UNITY_PROJECT, bumpProject, config.contracts?.[bumpProject], [bump[bumpProject]?.versionFile].filter(Boolean));
+assertContractBumped(UNITY_PROJECT, bumpProject, config.contracts?.[bumpProject], versionBookkeepingPaths(config, UNITY_PROJECT));
 
 if (apk.apiClientFreshness) {
   log.step('Checking generated API clients are up to date...');

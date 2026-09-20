@@ -11,7 +11,7 @@
 // the branch-per-env ceremony.
 // Usage: node build/build-service.mjs <service> [env] [--force]
 import { join } from 'node:path';
-import { run, capture, readContractVersion } from '../shared/utils.mjs';
+import { run, capture, readContractVersion, versionBookkeepingPaths } from '../shared/utils.mjs';
 import { assertClean, assertBumped, assertUpstreamReady, assertContractBumped } from '../shared/publish-guard.mjs';
 import { verifyServiceDeploy } from './verify-deploy.mjs';
 import { buildAndDeployDockerService } from './docker-service-build.mjs';
@@ -51,9 +51,8 @@ const looseUpstream = (svc.looseUpstreamEnvs ?? []).includes(env);
 for (const upstream of svc.upstream ?? []) {
   assertUpstreamReady(join(workspaceRoot, services[upstream]?.dir ?? upstream), upstream, env, { loose: looseUpstream });
 }
-// bump[service].versionFile (e.g. package.json) is rewritten by every `ci-scripts bump` as a
-// mechanical side effect of deploying — not a real content change, so it's excluded here.
-assertContractBumped(join(workspaceRoot, dir), service, config.contracts?.[service], [bump[service]?.versionFile].filter(Boolean));
+const repoDir = join(workspaceRoot, dir);
+assertContractBumped(repoDir, service, config.contracts?.[service], versionBookkeepingPaths(config, repoDir));
 
 const versionTag = genVersion(env, readContractVersion(config, service)).full;
 

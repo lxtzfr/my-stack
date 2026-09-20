@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, resolve, relative, isAbsolute } from 'node:path';
 
 const IS_WIN = process.platform === 'win32';
 
@@ -114,6 +114,27 @@ export function readContractVersionAt(repoDir, versionFile) {
   const versionFilePath = resolve(repoDir, versionFile)
   if (!existsSync(versionFilePath)) return null
   return JSON.parse(readFileSync(versionFilePath, 'utf8')).version ?? null
+}
+
+/** Every version-bookkeeping file (bump.<x>.versionFile, contracts.<x>.versionFile — across both
+ *  `services` and `subImages` keys) that resolves to somewhere under `repoDir`, as paths relative
+ *  to it. Used to make assertContractBumped ignore these: when two contracts share one repo (e.g.
+ *  server's own contract and its tts sub-image's), a bump to either one would otherwise always
+ *  fail the other's "anything changed" check too, since bumping writes a file that IS a change in
+ *  that shared repo — an infinite ping-pong. None of these represent real content changes on their
+ *  own; they're the bookkeeping this whole system runs on. */
+export function versionBookkeepingPaths(config, repoDir) {
+  const paths = new Set();
+  const resolveDir = (name) =>
+    resolve(config.workspaceRoot, config.services?.[name]?.dir ?? config.subImages?.[name]?.dir ?? name);
+  const tryAdd = (dir, file) => {
+    if (!file) return;
+    const rel = relative(repoDir, resolve(dir, file));
+    if (!rel.startsWith('..') && !isAbsolute(rel)) paths.add(rel.replace(/\\/g, '/'));
+  };
+  for (const [name, b] of Object.entries(config.bump ?? {})) tryAdd(resolveDir(name), b.versionFile);
+  for (const [name, c] of Object.entries(config.contracts ?? {})) tryAdd(resolveDir(name), c.versionFile);
+  return [...paths];
 }
 
 export function readContractVersion(config, project) {
