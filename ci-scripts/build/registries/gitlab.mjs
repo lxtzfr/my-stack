@@ -25,10 +25,15 @@ export function listImageTags({ namespace, project, imagePath }) {
   return tags.map(t => t.name);
 }
 
-export function dockerBuildPush({ namespace, env, versionTag, registryTag = versionTag, buildArgs = {}, ssh, imagePath, dockerfilePath, contextDir }) {
+export function dockerBuildPush({ namespace, env, versionTag, registryTag = versionTag, buildArgs = {}, ssh, imagePath, dockerfilePath, contextDir, extraTags = [] }) {
   const imageName = `${namespace}/${imagePath}`;
   const latest    = `registry.gitlab.com/${imageName}:latest`;
   const dated     = `registry.gitlab.com/${imageName}:${registryTag}`;
+  // A pinned, human-chosen tag (e.g. a sub-image's contract version) alongside `latest` — lets a
+  // consumer pin to it explicitly instead of always riding whatever `latest` happens to be. Moves
+  // forward each build made under that same contract version (unlike `dated`, which is unique per
+  // build) so a consumer pinned to it still gets non-breaking content updates.
+  const pinned = extraTags.map(tag => `registry.gitlab.com/${imageName}:${tag}`);
 
   console.log(`Pushing [${env}] ${latest} (${registryTag})...`);
   run([
@@ -47,6 +52,7 @@ export function dockerBuildPush({ namespace, env, versionTag, registryTag = vers
     '--file', dockerfilePath.replace(/\\/g, '/'),
     '--tag', latest,
     '--tag', dated,
+    ...pinned.flatMap(tag => ['--tag', tag]),
     contextDir.replace(/\\/g, '/'),
   ]);
 

@@ -8,7 +8,7 @@
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { findBySuffix, printRecap, writeRecap } from '../shared/utils.mjs';
+import { findBySuffix, printRecap, writeRecap, readContractVersionAt } from '../shared/utils.mjs';
 import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags, resolveRegistry } from './docker-registry.mjs';
 import { triggerDeploy } from './docker-service-build.mjs';
 import { loadConfig } from '../shared/config.mjs';
@@ -68,6 +68,14 @@ const { repoName } = resolveRegistry(project);
 const imagePath = `${repoName}/${sub.parentService}-${name}`;
 const versionTag = env;
 
+// A sub-image with a `contracts.<name>` entry also gets a pinned tag equal to its plain contract
+// version (e.g. "1.0.0"), alongside `latest` — so a consumer (e.g. server's docker-compose.yml)
+// can pin to that instead of always riding `latest`, and only moves onto a breaking sub-image
+// change once someone deliberately bumps the pin. See docs/features/version-compatibility.md.
+// Sub-images have no `services` entry to resolve a dir from (unlike readContractVersion's usual
+// callers), so this reads directly off `sub.dir` instead.
+const contractVersion = readContractVersionAt(dir, config.contracts?.[name]?.versionFile);
+
 const foundTag = findBySuffix(listImageTags({ project, imagePath }), `-${contentHash}`);
 const matchedTag = force ? undefined : foundTag;
 const registryTag = matchedTag ?? `${versionTag}-${contentHash}`;
@@ -77,9 +85,9 @@ if (matchedTag) {
 } else {
   if (force && foundTag) log.warn(`--force: rebuilding despite ${foundTag} already in the registry.`);
   dockerLogin(project);
-  dockerBuildPush({ project, env, versionTag, registryTag, imagePath, dockerfilePath: join(dir, 'Dockerfile'), contextDir: dir });
+  dockerBuildPush({ project, env, versionTag, registryTag, imagePath, dockerfilePath: join(dir, 'Dockerfile'), contextDir: dir, extraTags: contractVersion ? [contractVersion] : [] });
   cleanupOldTags({ project, imagePath });
-  log.step(`Built and pushed ${registryTag} (+ latest).`);
+  log.step(`Built and pushed ${registryTag} (+ latest${contractVersion ? ` + ${contractVersion}` : ''}).`);
 }
 
 const webhookUrl = services[sub.parentService]?.webhooks?.[env];

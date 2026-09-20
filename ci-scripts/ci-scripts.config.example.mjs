@@ -60,13 +60,20 @@ export default {
   // signal that the contract may need bumping, not a real breaking-change detector (it fires on
   // ANY change under those paths, including a pure refactor). Paths are relative to the project's
   // own repo root.
+  // A `subImages` entry can have a `contracts` entry too, keyed by its own name (not a `services`
+  // key) — `build-sub-image` then pushes a pinned `:<version>` tag alongside `latest`, so a
+  // consumer (below, server's own docker-compose.yml) can pin to it explicitly instead of always
+  // riding `latest`, and only moves onto a breaking sub-image change once someone deliberately
+  // bumps the pin (`ci-scripts bump-contract tts <major|minor|patch>`).
   contracts: {
     server: {
       versionFile: 'server/contract-version.json',
       watchPaths: ['src/api/device-management', 'src/api/web', 'lib/web'],
     },
-    web:    { versionFile: 'web/contract-version.json' },
-    unity:  { versionFile: 'unity/contract-version.json' },
+    web:  { versionFile: 'web/contract-version.json' },
+    unity: { versionFile: 'unity/contract-version.json' },
+    // Relative to subImages.tts.dir itself (below), not to the workspace root like the others.
+    tts:  { versionFile: 'contract-version.json' },
   },
 
   // --- `ci-scripts build <service> <env>`: one entry per docker-built service. ---

@@ -105,13 +105,22 @@ export function resolveProjectId(namespace, repoName) {
 /** Reads a project's semver contract version (contracts.<project>.versionFile), or null if that
  *  project has no `contracts` entry — genVersion()'s contractVersion param is optional for exactly
  *  this reason, so a project that hasn't adopted a contract version yet still gets a plain version. */
+/** Reads a `{"version": "X.Y.Z"}` file directly, given its containing directory — the primitive
+ *  `readContractVersion` builds on for a `services`-map project. Exported separately for a caller
+ *  with no `services` entry to resolve a dir from (e.g. a sub-image, keyed by its own `dir` in
+ *  `subImages` instead). */
+export function readContractVersionAt(repoDir, versionFile) {
+  if (!versionFile) return null
+  const versionFilePath = resolve(repoDir, versionFile)
+  if (!existsSync(versionFilePath)) return null
+  return JSON.parse(readFileSync(versionFilePath, 'utf8')).version ?? null
+}
+
 export function readContractVersion(config, project) {
   const projectConfig = config.contracts?.[project]
   if (!projectConfig) return null
   const repoDir = resolve(config.workspaceRoot, config.services?.[project]?.dir ?? project)
-  const versionFilePath = resolve(repoDir, projectConfig.versionFile)
-  if (!existsSync(versionFilePath)) return null
-  return JSON.parse(readFileSync(versionFilePath, 'utf8')).version ?? null
+  return readContractVersionAt(repoDir, projectConfig.versionFile)
 }
 
 /** Switch repoDir back to main. Call at the end of a build script so it never stays on deploy/<env>. */

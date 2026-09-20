@@ -46,10 +46,12 @@ export function listImageTags({ namespace, imagePath }) {
   return found.versions.flatMap(v => v.metadata?.container?.tags ?? []);
 }
 
-export function dockerBuildPush({ namespace, env, versionTag, registryTag = versionTag, buildArgs = {}, ssh, imagePath, dockerfilePath, contextDir }) {
+export function dockerBuildPush({ namespace, env, versionTag, registryTag = versionTag, buildArgs = {}, ssh, imagePath, dockerfilePath, contextDir, extraTags = [] }) {
   const imageName = `${namespace}/${imagePath}`;
   const latest    = `${GHCR_HOST}/${imageName}:latest`;
   const dated     = `${GHCR_HOST}/${imageName}:${registryTag}`;
+  // See gitlab.mjs's dockerBuildPush for what this is (a pinned, human-chosen tag alongside latest).
+  const pinned = extraTags.map(tag => `${GHCR_HOST}/${imageName}:${tag}`);
 
   console.log(`Pushing [${env}] ${latest} (${registryTag})...`);
   run([
@@ -68,6 +70,7 @@ export function dockerBuildPush({ namespace, env, versionTag, registryTag = vers
     '--file', dockerfilePath.replace(/\\/g, '/'),
     '--tag', latest,
     '--tag', dated,
+    ...pinned.flatMap(tag => ['--tag', tag]),
     contextDir.replace(/\\/g, '/'),
   ]);
 
