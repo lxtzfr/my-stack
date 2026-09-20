@@ -58,9 +58,14 @@ const contentHash = hashDir(dir).slice(0, 10);
 // parent service's own `dir` override (e.g. '.' for a single-repo project) rather than assuming
 // its services-map key doubles as its checkout dir.
 const project = services[sub.parentService]?.dir ?? sub.parentService;
-// Prefixed with the repo's own name — see docker-service-build.mjs's imagePath for why.
+// Exactly 3 path segments below the registry host — see docker-service-build.mjs's imagePath for
+// why (GitLab rejects deeper nesting) and for the repoName collision-guard rationale. No `env`
+// segment here, unlike a regular service: a sub-image is content-hash-keyed specifically because
+// its content doesn't vary by env (see subImages' doc comment in ci-scripts.config.example.mjs) —
+// one shared image serves every env, so the "already built" check below also now correctly
+// dedupes across envs instead of rebuilding identical content once per env.
 const { repoName } = resolveRegistry(project);
-const imagePath = `${repoName}/${sub.parentService}/${name}/${env}`;
+const imagePath = `${repoName}/${sub.parentService}-${name}`;
 const versionTag = env;
 
 const foundTag = findBySuffix(listImageTags({ project, imagePath }), `-${contentHash}`);

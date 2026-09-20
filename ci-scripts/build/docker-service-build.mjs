@@ -27,11 +27,15 @@ export async function buildAndDeployDockerService({
   force = false,     // bypass the already-built skip check and rebuild/push/deploy regardless
 }) {
   const repoDir = join(workspaceRoot, dir);
-  // Prefixed with the repo's own name: `service`/`env` alone (e.g. "web/prd") collides across
-  // every repo under the same registry owner that happens to name a service the same way —
-  // this repo's `web/prd` and some other repo's `web/prd` would silently share one GHCR tag.
+  // Exactly 3 path segments below the registry host, always: <namespace>/<repoName>/<name> —
+  // GitLab's container registry rejects creating a new repository path beyond a certain nesting
+  // depth (confirmed: 4 segments total succeeds, 5 fails with "insufficient_scope"), so nothing
+  // below `repoName` is ever its own path segment — `service` and `env` fold into one dash-joined
+  // name instead of a `service/env` sub-path. `repoName` itself still guards against collision
+  // across repos under the same registry owner that happen to name a service the same way (this
+  // repo's `web` and some other repo's `web` would otherwise silently share one tag).
   const { repoName } = resolveRegistry(dir);
-  const imagePath = `${repoName}/${service}/${env}`;
+  const imagePath = `${repoName}/${service}-${env}`;
 
   // Content-addressed identity: if this exact commit was already built for this env, skip the
   // rebuild entirely — bump-version.mjs already refuses to bump twice without a
