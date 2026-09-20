@@ -69,6 +69,36 @@ export function assertUpstreamReady(repoDir, project, env, { loose = false } = {
   process.exit(1);
 }
 
+// Refuses to proceed if any file under contractConfig.watchPaths changed since the last commit
+// that touched contractConfig.versionFile — a signal the contract may need `bump-contract` before
+// this gets built/deployed. A no-op if watchPaths isn't configured (opt-in per project — most
+// projects have nothing meaningful to gate on here). This is a blunt, path-based signal, not a
+// real breaking-change detector: it fires on ANY change under those paths, including a pure
+// refactor that doesn't touch the actual contract shape — that's the tradeoff for staying simple.
+export function assertContractFresh(repoDir, project, contractConfig) {
+  if (!contractConfig?.watchPaths?.length) return;
+  const { versionFile, watchPaths } = contractConfig;
+
+  const lastBump = git(repoDir, ['log', '-1', '--format=%H', '--', versionFile]);
+  if (!lastBump) {
+    console.error(`${project}: ${versionFile} has no commit history yet — run: ci-scripts bump-contract ${project} <major|minor|patch>`);
+    process.exit(1);
+  }
+
+  const changed = git(repoDir, ['diff', '--name-only', `${lastBump}..HEAD`]).split('\n').filter(Boolean);
+  const touched = changed.filter(f => watchPaths.some(p => f === p || f.startsWith(p.replace(/\/$/, '') + '/')));
+  if (touched.length) {
+    console.error(
+      `${project}: contract-relevant files changed since the last bump-contract (${lastBump.slice(0, 10)}) without a new one:\n` +
+      touched.map(f => `  - ${f}`).join('\n') +
+      `\nIf this changed the API contract, run: ci-scripts bump-contract ${project} <major|minor|patch>. ` +
+      `Otherwise, bump anyway (a patch bump costs nothing) to clear this check.`
+    );
+    process.exit(1);
+  }
+  console.log(`${project}'s contract is up to date with its watched paths.`);
+}
+
 // Refuses to proceed if a generated API client is stale relative to the upstream specs it was
 // generated from, tracked via a lock file holding a hash of those specs. Config-driven: pass the
 // lock file path, the spec files it hashes, and a hint command to regenerate.

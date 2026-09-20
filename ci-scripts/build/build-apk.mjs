@@ -6,7 +6,7 @@ import { mkdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { run, capture, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap, readContractVersion } from '../shared/utils.mjs';
 import { cleanupOldPackages, listPackageVersions, pruneOldPackageFiles } from './gitlab-packages.mjs';
-import { assertBumped, assertUpstreamReady, assertGeneratedClientFresh } from '../shared/publish-guard.mjs';
+import { assertBumped, assertUpstreamReady, assertGeneratedClientFresh, assertContractFresh } from '../shared/publish-guard.mjs';
 import { genVersion } from './gen-version.mjs';
 import { loadConfig } from '../shared/config.mjs';
 import { makeLogger } from '../shared/log.mjs';
@@ -31,6 +31,7 @@ if (apk.upstream) {
   const loose = (apk.looseUpstreamEnvs ?? []).includes(env);
   assertUpstreamReady(join(workspaceRoot, apk.upstream), apk.upstream, env, { loose });
 }
+assertContractFresh(UNITY_PROJECT, bumpProject, config.contracts?.[bumpProject]);
 
 if (apk.apiClientFreshness) {
   log.step('Checking generated API clients are up to date...');

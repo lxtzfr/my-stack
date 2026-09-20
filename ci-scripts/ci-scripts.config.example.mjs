@@ -55,8 +55,16 @@ export default {
   // versionFile (just needs to exist upfront with `{"version": "0.1.0"}` — this command only bumps
   // it); this command doesn't wire them together on its own — that's a per-project build step
   // (e.g. baking the version into a generated API client, or a runtime check comparing majors).
+  // `watchPaths` (optional, opt-in per project) makes `build`/`build-apk` refuse to proceed if any
+  // file under those paths changed since the last bump-contract commit — a blunt, path-based
+  // signal that the contract may need bumping, not a real breaking-change detector (it fires on
+  // ANY change under those paths, including a pure refactor). Paths are relative to the project's
+  // own repo root.
   contracts: {
-    server: { versionFile: 'server/contract-version.json' },
+    server: {
+      versionFile: 'server/contract-version.json',
+      watchPaths: ['src/api/device-management', 'src/api/web', 'lib/web'],
+    },
     web:    { versionFile: 'web/contract-version.json' },
     unity:  { versionFile: 'unity/contract-version.json' },
   },
