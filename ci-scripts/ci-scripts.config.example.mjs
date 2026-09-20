@@ -55,21 +55,18 @@ export default {
   // versionFile (just needs to exist upfront with `{"version": "0.1.0"}` — this command only bumps
   // it); this command doesn't wire them together on its own — that's a per-project build step
   // (e.g. baking the version into a generated API client, or a runtime check comparing majors).
-  // `watchPaths` (optional, opt-in per project) makes `build`/`build-apk` refuse to proceed if any
-  // file under those paths changed since the last bump-contract commit — a blunt, path-based
-  // signal that the contract may need bumping, not a real breaking-change detector (it fires on
-  // ANY change under those paths, including a pure refactor). Paths are relative to the project's
-  // own repo root.
+  // `build`/`build-apk`/`build-sub-image` refuse to proceed if ANYTHING changed anywhere in the
+  // repo since the last commit that touched versionFile — not scoped to particular paths, so it
+  // can't miss a contract-relevant change the way a path list could. The tradeoff: every deploy
+  // needs a fresh bump-contract first, however small the change (even a patch bump costs nothing —
+  // see build/publish-guard.mjs's assertContractBumped).
   // A `subImages` entry can have a `contracts` entry too, keyed by its own name (not a `services`
   // key) — `build-sub-image` then pushes a pinned `:<version>` tag alongside `latest`, so a
   // consumer (below, server's own docker-compose.yml) can pin to it explicitly instead of always
   // riding `latest`, and only moves onto a breaking sub-image change once someone deliberately
   // bumps the pin (`ci-scripts bump-contract tts <major|minor|patch>`).
   contracts: {
-    server: {
-      versionFile: 'server/contract-version.json',
-      watchPaths: ['src/api/device-management', 'src/api/web', 'lib/web'],
-    },
+    server: { versionFile: 'server/contract-version.json' },
     web:  { versionFile: 'web/contract-version.json' },
     unity: { versionFile: 'unity/contract-version.json' },
     // Relative to subImages.tts.dir itself (below), not to the workspace root like the others.

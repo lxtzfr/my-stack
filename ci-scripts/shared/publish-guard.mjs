@@ -69,15 +69,18 @@ export function assertUpstreamReady(repoDir, project, env, { loose = false } = {
   process.exit(1);
 }
 
-// Refuses to proceed if any file under contractConfig.watchPaths changed since the last commit
-// that touched contractConfig.versionFile — a signal the contract may need `bump-contract` before
-// this gets built/deployed. A no-op if watchPaths isn't configured (opt-in per project — most
-// projects have nothing meaningful to gate on here). This is a blunt, path-based signal, not a
-// real breaking-change detector: it fires on ANY change under those paths, including a pure
-// refactor that doesn't touch the actual contract shape — that's the tradeoff for staying simple.
-export function assertContractFresh(repoDir, project, contractConfig) {
-  if (!contractConfig?.watchPaths?.length) return;
-  const { versionFile, watchPaths } = contractConfig;
+// Refuses to proceed if ANY file changed since the last commit that touched
+// contractConfig.versionFile, anywhere in the repo — not scoped to particular paths (an earlier
+// `watchPaths`-scoped version of this had blind spots: a change outside the watched paths could
+// still affect the contract and would never trip it). The tradeoff: every single deploy needs a
+// fresh bump-contract first, however small the change — but even a patch bump costs nothing, and
+// this can never miss something the way a path list could. `ignorePaths` excludes files that
+// change as a mechanical side effect of deploying itself (e.g. bump-version.mjs's own
+// per-env versionFile, rewritten on every `ci-scripts bump`), not real content changes.
+// A no-op if contractConfig isn't set (most projects have no `contracts` entry).
+export function assertContractBumped(repoDir, project, contractConfig, ignorePaths = []) {
+  if (!contractConfig?.versionFile) return;
+  const { versionFile } = contractConfig;
 
   const lastBump = git(repoDir, ['log', '-1', '--format=%H', '--', versionFile]);
   if (!lastBump) {
@@ -85,18 +88,17 @@ export function assertContractFresh(repoDir, project, contractConfig) {
     process.exit(1);
   }
 
-  const changed = git(repoDir, ['diff', '--name-only', `${lastBump}..HEAD`]).split('\n').filter(Boolean);
-  const touched = changed.filter(f => watchPaths.some(p => f === p || f.startsWith(p.replace(/\/$/, '') + '/')));
-  if (touched.length) {
+  const ignored = new Set([versionFile, ...ignorePaths]);
+  const changed = git(repoDir, ['diff', '--name-only', `${lastBump}..HEAD`]).split('\n').filter(Boolean).filter(f => !ignored.has(f));
+  if (changed.length) {
     console.error(
-      `${project}: contract-relevant files changed since the last bump-contract (${lastBump.slice(0, 10)}) without a new one:\n` +
-      touched.map(f => `  - ${f}`).join('\n') +
-      `\nIf this changed the API contract, run: ci-scripts bump-contract ${project} <major|minor|patch>. ` +
-      `Otherwise, bump anyway (a patch bump costs nothing) to clear this check.`
+      `${project}: files changed since the last bump-contract (${lastBump.slice(0, 10)}) without a new one:\n` +
+      changed.map(f => `  - ${f}`).join('\n') +
+      `\nRun: ci-scripts bump-contract ${project} <major|minor|patch> before deploying.`
     );
     process.exit(1);
   }
-  console.log(`${project}'s contract is up to date with its watched paths.`);
+  console.log(`${project}'s contract reflects HEAD — nothing else changed since the last bump.`);
 }
 
 // Refuses to proceed if a generated API client is stale relative to the upstream specs it was

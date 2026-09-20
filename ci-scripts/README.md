@@ -91,7 +91,7 @@ See the fully-commented [`ci-scripts.config.example.mjs`](ci-scripts.config.exam
 | `dokploy` | `dokploy-*`, `build`, `build-sub-image` | Dokploy URL/project/SSH access |
 | `envs` | everything | env catalog (`host`/`apiHost` per env); `loc` is never deployable |
 | `bump` | `bump`, `build`, `build-apk`, `build-all` | which projects have a `deploy/<env>` cycle |
-| `contracts` | `bump-contract`, `build`, `build-apk`, `build-sub-image` | which projects (or `subImages` entries, keyed the same way) have a semver contract-version file, bumped manually on `main`; optional `watchPaths` makes `build`/`build-apk` refuse to proceed if those paths changed since the last bump; a sub-image's contract version is also pushed as a pinned `:<version>` tag alongside `latest` |
+| `contracts` | `bump-contract`, `build`, `build-apk`, `build-sub-image` | which projects (or `subImages` entries, keyed the same way) have a semver contract-version file, bumped manually on `main`. `build`/`build-apk`/`build-sub-image` refuse to proceed if anything changed anywhere in the repo since the last bump — every deploy needs a fresh one first. A sub-image's contract version is also pushed as a pinned `:<version>` tag alongside `latest` |
 | `services` | `build`, `build-all`, `verify-deploy` | docker-built services: webhooks, health check, build steps |
 | `subImages` | `build-sub-image`, `build-all` | content-hash-keyed images nested under a parent service |
 | `apk` | `build-apk`, `build-all` | Unity Android build config (GitLab only) |
