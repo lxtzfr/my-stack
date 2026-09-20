@@ -48,6 +48,19 @@ export default {
     // server: { versionFile: 'server/package.json', looseEnvs: ['dev'] },
   },
 
+  // --- `ci-scripts bump-contract <project> <major|minor|patch>`: one semver contract version per
+  // project, bumped by hand on `main` whenever a human judges an integration surface changed in a
+  // breaking/additive/fix way — independent of `bump`'s per-env timestamp above, which only marks
+  // "when was this deployed" and carries no compatibility meaning. Each project keeps its own
+  // versionFile (just needs to exist upfront with `{"version": "0.1.0"}` — this command only bumps
+  // it); this command doesn't wire them together on its own — that's a per-project build step
+  // (e.g. baking the version into a generated API client, or a runtime check comparing majors).
+  contracts: {
+    server: { versionFile: 'server/contract-version.json' },
+    web:    { versionFile: 'web/contract-version.json' },
+    unity:  { versionFile: 'unity/contract-version.json' },
+  },
+
   // --- `ci-scripts build <service> <env>`: one entry per docker-built service. ---
   // Registry (GitLab vs GitHub) is auto-detected per service from its own `git remote` — no config
   // needed, a GitLab-hosted service and a GitHub-hosted one can coexist here. A service only goes

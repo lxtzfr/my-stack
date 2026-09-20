@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 const IS_WIN = process.platform === 'win32';
 
@@ -100,6 +100,18 @@ export function resolveProjectId(namespace, repoName) {
   const id = JSON.parse(capture(['glab', 'api', `projects/${namespace}%2F${repoName}`])).id;
   if (!id) throw new Error(`Could not resolve project ID for ${namespace}/${repoName}`);
   return id;
+}
+
+/** Reads a project's semver contract version (contracts.<project>.versionFile), or null if that
+ *  project has no `contracts` entry — genVersion()'s contractVersion param is optional for exactly
+ *  this reason, so a project that hasn't adopted a contract version yet still gets a plain version. */
+export function readContractVersion(config, project) {
+  const projectConfig = config.contracts?.[project]
+  if (!projectConfig) return null
+  const repoDir = resolve(config.workspaceRoot, config.services?.[project]?.dir ?? project)
+  const versionFilePath = resolve(repoDir, projectConfig.versionFile)
+  if (!existsSync(versionFilePath)) return null
+  return JSON.parse(readFileSync(versionFilePath, 'utf8')).version ?? null
 }
 
 /** Switch repoDir back to main. Call at the end of a build script so it never stays on deploy/<env>. */

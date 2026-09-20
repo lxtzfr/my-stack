@@ -54,13 +54,14 @@ pnpm add -D github:lxtzfr/my-stack#path:ci-scripts
 
 | Command | Does |
 |---|---|
-| `bump <project> <env>` | Bumps a project's version, merges `main` into `deploy/<env>` (creating it if needed), commits, pushes. No-op (exit `2`) if `main` hasn't changed since the last bump. |
+| `bump <project> <env>` | Bumps a project's version, merges `main` into `deploy/<env>` (creating it if needed), commits, pushes. No-op (exit `2`) if `main` hasn't changed since the last bump. With `contracts.<project>` configured, the written version is prefixed with that project's contract version as build metadata (e.g. `1.0.0+2026.9.20-15.30`), same base as `gen-version`'s `full`. |
+| `bump-contract <project> <major\|minor\|patch>` | Bumps a project's semver *contract* version, committed straight to `main` — a human call on major/minor/patch, independent of `bump`'s per-env timestamp. See `contracts` below. |
 | `build <service> <env>` | Runs the service's `build()`, pushes to the auto-detected registry, syncs the Dokploy compose, triggers a deploy, polls until it's live. Skips the rebuild if this commit was already shipped for this env. |
 | `build-sub-image <name> <env>` | Builds a content-hash-keyed image (e.g. large static assets) nested under a parent service's registry namespace, reusing its Dokploy webhook. |
 | `build-apk <env>` | Builds a Unity Android project and pushes the APK as a GitLab generic package (GitLab-only). |
 | `build-all <env>` | Runs `bump` → `build` for every configured service/sub-image/APK, keeps going past individual failures, prints a summary table. |
 | `verify-deploy <service> <env> <versionTag>` | Polls the service's health URL until it reports the expected version. |
-| `gen-version <env>` | Generates a timestamp version + Android `versionCode`. |
+| `gen-version <env> [contractVersion]` | Generates a timestamp version + Android `versionCode`. With `contracts.<service>` configured, `build`/`build-apk` prefix the app-visible version with that project's semver contract as build metadata, e.g. `1.0.0+dev-2026.09.20-22.33`. |
 | `dokploy-setup-env <env>` | Provisions a new Dokploy environment (composes, domains, wildcard DNS) — idempotent. |
 | `dokploy-compose-sync <service> <env>` | Pushes the local `docker-compose.yml` to Dokploy if it drifted. |
 | `dokploy-env-sync <service> <env>` | Re-pushes the service's `envVars` values to Dokploy and redeploys. Needed because `setup-env.mjs` only sets them once, at first provisioning — a value changing in `envVars`/`.env` afterwards (a rotated token, a new var) never reaches Dokploy on its own. |
@@ -90,6 +91,7 @@ See the fully-commented [`ci-scripts.config.example.mjs`](ci-scripts.config.exam
 | `dokploy` | `dokploy-*`, `build`, `build-sub-image` | Dokploy URL/project/SSH access |
 | `envs` | everything | env catalog (`host`/`apiHost` per env); `loc` is never deployable |
 | `bump` | `bump`, `build`, `build-apk`, `build-all` | which projects have a `deploy/<env>` cycle |
+| `contracts` | `bump-contract` | which projects have a semver contract-version file, bumped manually on `main` |
 | `services` | `build`, `build-all`, `verify-deploy` | docker-built services: webhooks, health check, build steps |
 | `subImages` | `build-sub-image`, `build-all` | content-hash-keyed images nested under a parent service |
 | `apk` | `build-apk`, `build-all` | Unity Android build config (GitLab only) |

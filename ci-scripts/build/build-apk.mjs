@@ -4,7 +4,7 @@
 // Usage: node build/build-apk.mjs [env] [--force]
 import { mkdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { run, capture, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap } from '../shared/utils.mjs';
+import { run, capture, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap, readContractVersion } from '../shared/utils.mjs';
 import { cleanupOldPackages, listPackageVersions, pruneOldPackageFiles } from './gitlab-packages.mjs';
 import { assertBumped, assertUpstreamReady, assertGeneratedClientFresh } from '../shared/publish-guard.mjs';
 import { genVersion } from './gen-version.mjs';
@@ -91,7 +91,7 @@ function keystoreArgs() {
 }
 
 log.step('Generating version...');
-const { versionCode, pretty } = genVersion(env);
+const { versionCode, full: displayVersion } = genVersion(env, readContractVersion(config, bumpProject));
 
 const projectVersionTxt = readFileSync(join(UNITY_PROJECT, 'ProjectSettings', 'ProjectVersion.txt'), 'utf8');
 const UNITY_VERSION = projectVersionTxt.match(/^m_EditorVersion:\s*(.+)$/m)?.[1]?.trim();
@@ -103,10 +103,13 @@ if (!existsSync(UNITY_EXE)) { log.error(`Unity not found: ${UNITY_EXE}`); proces
 mkdirSync(join(OUTPUT_DIR, env), { recursive: true });
 const APK_PATH = join(OUTPUT_DIR, env, APK_NAME);
 
-// The pushed package version carries the buildKey suffix; -bundleVersion (app-visible) stays clean.
-const packageVersion = `${versionCode}_${pretty}-${buildKey}`;
+// The pushed package version carries versionCode + the buildKey suffix, for registry sorting and
+// content-addressing; -bundleVersion (app-visible, matches server/web's BUILD_VERSION format
+// exactly, e.g. `1.0.0+dev-2026.09.20-22.33`) carries neither — versionCode is still passed to
+// Android separately via -versionCode, its own required strictly-increasing integer field.
+const packageVersion = `${versionCode}_${displayVersion}-${buildKey}`;
 
-log.step(`Building [${env}] v${versionCode} (${pretty})...`);
+log.step(`Building [${env}] v${versionCode} (${displayVersion})...`);
 run([
   UNITY_EXE,
   '-batchmode', '-quit',
@@ -117,7 +120,7 @@ run([
   '-bundleId', cfg.bundleId,
   '-appName', cfg.appName,
   '-versionCode', String(versionCode),
-  '-bundleVersion', `${versionCode}_${pretty}`,
+  '-bundleVersion', displayVersion,
   ...(apk.buildArgs ? apk.buildArgs(config, env) : []),
   ...(cfg.dev ? ['-debuggable'] : []),
   ...keystoreArgs(),
@@ -142,10 +145,10 @@ checkoutMain(UNITY_PROJECT);
 
 printRecap(`Result: ${bumpProject} [${env}]`, [
   ['status', 'built and pushed'],
-  ['version', `${versionCode}_${pretty}`],
+  ['version', displayVersion],
   ['package version', packageVersion],
   ['download', downloadUrl],
 ]);
-writeRecap(configDir, `${bumpProject}-${env}`, { service: bumpProject, env, status: 'built and pushed', version: `${versionCode}_${pretty}`, identity: packageVersion, download: downloadUrl });
+writeRecap(configDir, `${bumpProject}-${env}`, { service: bumpProject, env, status: 'built and pushed', version: displayVersion, identity: packageVersion, download: downloadUrl });
 
 log.done(`v${versionCode} [${env}]`);

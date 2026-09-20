@@ -16,6 +16,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { makeLogger } from '../shared/log.mjs'
 import { loadConfig } from '../shared/config.mjs'
+import { readContractVersion } from '../shared/utils.mjs'
 
 const config = await loadConfig()
 const { workspaceRoot, bump: projects, envs, services = {} } = config
@@ -120,7 +121,7 @@ if (deployBranchExistsRemotely) {
 const d = new Date()
 const datePart = `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}` // semver-safe, no leading zeros
 const timePart = `${d.getHours()}.${d.getMinutes()}` // pre-release, no leading zeros
-const newVersion = `${datePart}-${timePart}`
+const timestamp = `${datePart}-${timePart}`
 
 // --- Bring deploy/<env> up to date with the source branch (merge, never force-push) ---
 if (deployBranchExistsRemotely) {
@@ -135,6 +136,12 @@ if (deployBranchExistsRemotely) {
 } else {
   git(['checkout', '-b', deployBranch, sourceBranch])
 }
+
+// Read post-merge so it reflects whatever contract-version.json now says on this branch — same
+// base+metadata shape as gen-version.mjs's `full`, so a project's contract version is the one
+// number that anchors both its per-env deploy identity and its app-visible BUILD_VERSION.
+const contractVersion = readContractVersion(config, project)
+const newVersion = contractVersion ? `${contractVersion}+${timestamp}` : timestamp
 
 const pkg = JSON.parse(readFileSync(versionFilePath, 'utf8'))
 if (newVersion === pkg.version) {

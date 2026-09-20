@@ -13,6 +13,7 @@ checkForUpdates();
 
 const commands = {
   'bump':                 'build/bump-version.mjs',
+  'bump-contract':        'build/bump-contract.mjs',
   'build':                'build/build-service.mjs',
   'build-apk':            'build/build-apk.mjs',
   'build-sub-image':      'build/build-sub-image.mjs',

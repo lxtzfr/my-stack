@@ -41,7 +41,8 @@ export function listImageTags({ project, imagePath }) {
   return impl.listImageTags({ namespace, project: repoName, imagePath });
 }
 
-/** versionTag (human, e.g. 2026.7.15-19.17-dev) drives the app-visible BUILD_VERSION label;
+/** versionTag (human, e.g. 1.0.0+dev-2026.07.15-19.17, or just dev-2026.07.15-19.17 without a
+ *  `contracts` entry — see gen-version.mjs) drives the app-visible BUILD_VERSION label;
  *  registryTag (versionTag + commit sha suffix) is the actual docker tag pushed, so the commit
  *  identity used for the already-built check lives on the real release tag instead of a separate
  *  marker tag. `dockerfilePath`/`contextDir` default to `<project>/Dockerfile` and the workspace root. */

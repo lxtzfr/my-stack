@@ -11,7 +11,7 @@
 // the branch-per-env ceremony.
 // Usage: node build/build-service.mjs <service> [env] [--force]
 import { join } from 'node:path';
-import { run, capture } from '../shared/utils.mjs';
+import { run, capture, readContractVersion } from '../shared/utils.mjs';
 import { assertClean, assertBumped, assertUpstreamReady } from '../shared/publish-guard.mjs';
 import { verifyServiceDeploy } from './verify-deploy.mjs';
 import { buildAndDeployDockerService } from './docker-service-build.mjs';
@@ -52,7 +52,7 @@ for (const upstream of svc.upstream ?? []) {
   assertUpstreamReady(join(workspaceRoot, services[upstream]?.dir ?? upstream), upstream, env, { loose: looseUpstream });
 }
 
-const versionTag = genVersion(env).pretty;
+const versionTag = genVersion(env, readContractVersion(config, service)).full;
 
 await buildAndDeployDockerService({
   service,
