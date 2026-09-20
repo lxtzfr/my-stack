@@ -40,7 +40,10 @@ export async function buildAndDeployDockerService({
   const commitSha = capture(['git', '-C', repoDir, 'rev-parse', '--short=10', 'HEAD']);
   const foundTag = findBySuffix(listImageTags({ project: dir, imagePath }), `-${commitSha}`);
   const matchedTag = force ? undefined : foundTag;
-  const registryTag = matchedTag ?? `${versionTag}-${commitSha}`;
+  // Docker tag references only allow [a-zA-Z0-9_.-] — versionTag's "+" (semver build metadata,
+  // see gen-version.mjs) is invalid there even though it's fine in BUILD_VERSION/labels, which
+  // aren't constrained the same way.
+  const registryTag = matchedTag ?? `${versionTag.replace(/\+/g, '-')}-${commitSha}`;
 
   if (matchedTag) {
     log.skip(`${matchedTag} already in the registry for ${service}/${env} — build/push/cleanup skipped.`);
