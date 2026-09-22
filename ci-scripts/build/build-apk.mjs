@@ -104,11 +104,12 @@ if (!existsSync(UNITY_EXE)) { log.error(`Unity not found: ${UNITY_EXE}`); proces
 mkdirSync(join(OUTPUT_DIR, env), { recursive: true });
 const APK_PATH = join(OUTPUT_DIR, env, APK_NAME);
 
-// The pushed package version carries versionCode + the buildKey suffix, for registry sorting and
-// content-addressing; -bundleVersion (app-visible, matches server/web's BUILD_VERSION format
-// exactly, e.g. `1.0.0+dev-2026.09.20-22.33`) carries neither — versionCode is still passed to
-// Android separately via -versionCode, its own required strictly-increasing integer field.
-const packageVersion = `${versionCode}_${displayVersion}-${buildKey}`;
+// The pushed package version matches -bundleVersion (app-visible, matches server/web's
+// BUILD_VERSION format exactly, e.g. `1.0.0+dev-2026.09.20-22.33`) plus the buildKey suffix for
+// content-addressing/idempotency (see findBySuffix above) — already lexically sortable via its
+// embedded date. versionCode itself is only passed to Android via -versionCode, its own required
+// strictly-increasing integer field; it doesn't need to also ride along in the registry version.
+const packageVersion = `${displayVersion}-${buildKey}`;
 
 log.step(`Building [${env}] v${versionCode} (${displayVersion})...`);
 run([
