@@ -45,28 +45,42 @@ const REPO_NAME  = unityRemote.replace(/\.git$/, '').split(/[:/]/).pop();
 const PROJECT_ID = resolveProjectId(NAMESPACE, REPO_NAME);
 const PACKAGE    = `${apk.packagePrefix}-${env}`;
 
-// Content-addressed identity: skip the (several-minute) build if this exact unity (+ asset-project,
-// when configured) combination was already built for this env. assetProjectDir is only set when
-// art assets live in a separate repo pulled in as a UPM git dependency pinned to assetBranch — in
-// that case it must factor into the identity too, since its content isn't reflected in unity's own
-// commit. The identity is a suffix on the real published version name (no separate marker) —
-// versionCode isn't known ahead of a real build so the exact version string can't be reconstructed
-// on a retry.
-const unitySha = capture(['git', '-C', UNITY_PROJECT, 'rev-parse', '--short=10', 'HEAD']);
-let buildKey = unitySha;
-if (ASSET_PROJECT) {
-  run(['git', '-C', ASSET_PROJECT, 'fetch', 'origin', apk.assetBranch]);
-  const assetSha = capture(['git', '-C', ASSET_PROJECT, 'rev-parse', '--short=10', `origin/${apk.assetBranch}`]);
-  buildKey = `${unitySha}-${assetSha}`;
+// Content-addressed identity: skip the (several-minute) build if this exact content was already
+// built for this env. versionCode isn't known ahead of a real build so the exact version string
+// can't be reconstructed on a retry, but a stable identity known ahead of time is enough to search
+// the registry for.
+//
+// When a contract is configured, assertContractBumped (above) already refuses to proceed if a
+// single file in this repo changed since the last bump-contract commit — so the contract's semver
+// core alone (e.g. `1.0.1`) is already unique per content, and it's already embedded as the prefix
+// of displayVersion (`1.0.1+dev-...`) below — no separate marker or commit hash needed. Fall back
+// to hashing commits, appended as an explicit suffix, when there's no contract to lean on, or when
+// a separate asset repo (apk.assetProjectDir, a UPM git dependency pinned to assetBranch)
+// contributes content assertContractBumped's repo-local diff can't see.
+const contractVersion = readContractVersion(config, bumpProject);
+const useContractIdentity = Boolean(contractVersion) && !ASSET_PROJECT;
+
+let shaIdentity = null;
+if (!useContractIdentity) {
+  const unitySha = capture(['git', '-C', UNITY_PROJECT, 'rev-parse', '--short=10', 'HEAD']);
+  shaIdentity = unitySha;
+  if (ASSET_PROJECT) {
+    run(['git', '-C', ASSET_PROJECT, 'fetch', 'origin', apk.assetBranch]);
+    const assetSha = capture(['git', '-C', ASSET_PROJECT, 'rev-parse', '--short=10', `origin/${apk.assetBranch}`]);
+    shaIdentity = `${unitySha}-${assetSha}`;
+  }
 }
 
-const foundVersion = findBySuffix(listPackageVersions({ projectId: PROJECT_ID, packageName: PACKAGE, limit: 20 }), `-${buildKey}`);
+const versions = listPackageVersions({ projectId: PROJECT_ID, packageName: PACKAGE, limit: 20 });
+const foundVersion = useContractIdentity
+  ? versions.find(v => v.startsWith(`${contractVersion}+`))
+  : findBySuffix(versions, `-${shaIdentity}`);
 const matchedVersion = force ? undefined : foundVersion;
 
 if (force && foundVersion) log.warn(`--force: rebuilding despite ${foundVersion} already in the registry.`);
 
 if (matchedVersion) {
-  log.skip(`${buildKey} already built as ${PACKAGE}/${matchedVersion} — build skipped.`);
+  log.skip(`${useContractIdentity ? contractVersion : shaIdentity} already built as ${PACKAGE}/${matchedVersion} — build skipped.`);
   checkoutMain(UNITY_PROJECT);
   const skipDownloadUrl = `https://gitlab.com/api/v4/projects/${PROJECT_ID}/packages/generic/${PACKAGE}/latest/${APK_NAME}`;
   printRecap(`Result: ${bumpProject} [${env}]`, [
@@ -92,7 +106,7 @@ function keystoreArgs() {
 }
 
 log.step('Generating version...');
-const { versionCode, full: displayVersion } = genVersion(env, readContractVersion(config, bumpProject));
+const { versionCode, full: displayVersion } = genVersion(env, contractVersion);
 
 const projectVersionTxt = readFileSync(join(UNITY_PROJECT, 'ProjectSettings', 'ProjectVersion.txt'), 'utf8');
 const UNITY_VERSION = projectVersionTxt.match(/^m_EditorVersion:\s*(.+)$/m)?.[1]?.trim();
@@ -105,11 +119,13 @@ mkdirSync(join(OUTPUT_DIR, env), { recursive: true });
 const APK_PATH = join(OUTPUT_DIR, env, APK_NAME);
 
 // The pushed package version matches -bundleVersion (app-visible, matches server/web's
-// BUILD_VERSION format exactly, e.g. `1.0.0+dev-2026.09.20-22.33`) plus the buildKey suffix for
-// content-addressing/idempotency (see findBySuffix above) — already lexically sortable via its
-// embedded date. versionCode itself is only passed to Android via -versionCode, its own required
-// strictly-increasing integer field; it doesn't need to also ride along in the registry version.
-const packageVersion = `${displayVersion}-${buildKey}`;
+// BUILD_VERSION format exactly, e.g. `1.0.0+dev-2026.09.20-22.33`) — already lexically sortable via
+// its embedded date, and, when useContractIdentity is true, already carrying the content identity
+// checked for above via its `1.0.1+` prefix. Otherwise the sha identity rides along as an explicit
+// suffix, since it isn't embedded anywhere else in the string. versionCode itself is only passed to
+// Android via -versionCode, its own required strictly-increasing integer field; it doesn't need to
+// also ride along in the registry version.
+const packageVersion = useContractIdentity ? displayVersion : `${displayVersion}-${shaIdentity}`;
 
 log.step(`Building [${env}] v${versionCode} (${displayVersion})...`);
 run([
