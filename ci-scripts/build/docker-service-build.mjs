@@ -25,6 +25,7 @@ export async function buildAndDeployDockerService({
   composeFilePath,   // relative to workspaceRoot, defaults to <dir>/docker-compose.yml
   verify,            // (env, versionTag) => Promise<void>
   force = false,     // bypass the already-built skip check and rebuild/push/deploy regardless
+  onDeployed,        // ({ build, sha }) => void — called once a new image was really pushed/deployed
 }) {
   const repoDir = join(workspaceRoot, dir);
   // Exactly 3 path segments below the registry host, always: <namespace>/<repoName>/<name> —
@@ -98,6 +99,8 @@ export async function buildAndDeployDockerService({
       verifyAction = 'skipped (no new image)';
     }
   }
+
+  if (!matchedTag) onDeployed?.({ build: versionTag, sha: commitSha });
 
   checkoutMain(repoDir);
 

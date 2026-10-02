@@ -66,12 +66,21 @@ export default {
   // riding `latest`, and only moves onto a breaking sub-image change once someone deliberately
   // bumps the pin (`ci-scripts bump-contract tts <major|minor|patch>`).
   contracts: {
-    server: { versionFile: 'server/contract-version.json' },
-    web:  { versionFile: 'web/contract-version.json' },
-    unity: { versionFile: 'unity/contract-version.json' },
+    server: { versionFile: 'server/version.json' },
+    web:  { versionFile: 'web/version.json' },
+    unity: { versionFile: 'unity/version.json' },
     // Relative to subImages.tts.dir itself (below), not to the workspace root like the others.
-    tts:  { versionFile: 'contract-version.json' },
+    tts:  { versionFile: 'version.json' },
   },
+
+  // --- Optional: record every real deploy in a shared file. ---
+  // After a build that really pushed something (never on an 'up to date' skip), `build`/`build-apk`/
+  // `build-sub-image` write `<env>.<project> = { contract, build, sha, at }` into `file` and push it
+  // to `branch` of the git repo at `repo` (relative to this workspace root, e.g. a parent workspace
+  // repo holding cross-project docs). The file keeps only the latest entry per env/project, so it
+  // stays small; history is the branch's git log. Committed with git plumbing (temp index) — never
+  // touches that repo's working tree or checked-out branch. Best-effort: a failure only warns.
+  // deployLog: { repo: '..', branch: 'deploys', file: 'versions.json' },
 
   // --- `ci-scripts build <service> <env>`: one entry per docker-built service. ---
   // Registry (GitLab vs GitHub) is auto-detected per service from its own `git remote` — no config

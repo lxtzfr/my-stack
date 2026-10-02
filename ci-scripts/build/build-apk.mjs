@@ -10,6 +10,7 @@ import { assertBumped, assertUpstreamReady, assertGeneratedClientFresh, assertCo
 import { genVersion } from './gen-version.mjs';
 import { loadConfig } from '../shared/config.mjs';
 import { makeLogger } from '../shared/log.mjs';
+import { recordDeploy } from '../shared/deploy-log.mjs';
 
 const config = await loadConfig();
 const { workspaceRoot, configDir, envs, apk } = config;
@@ -158,6 +159,8 @@ cleanupOldPackages({ projectId: PROJECT_ID, packageName: PACKAGE });
 
 const downloadUrl = `https://gitlab.com/api/v4/projects/${PROJECT_ID}/packages/generic/${PACKAGE}/latest/${APK_NAME}`;
 log.step(`Download: ${downloadUrl}`);
+
+recordDeploy(config, log, { project: bumpProject, env, contract: contractVersion, build: displayVersion, sha: capture(['git', '-C', UNITY_PROJECT, 'rev-parse', '--short=10', 'HEAD']) });
 
 checkoutMain(UNITY_PROJECT);
 

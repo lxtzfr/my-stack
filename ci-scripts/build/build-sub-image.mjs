@@ -10,6 +10,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findBySuffix, printRecap, writeRecap, readContractVersionAt, versionBookkeepingPaths } from '../shared/utils.mjs';
 import { assertContractBumped } from '../shared/publish-guard.mjs';
+import { recordDeploy } from '../shared/deploy-log.mjs';
 import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags, resolveRegistry } from './docker-registry.mjs';
 import { triggerDeploy } from './docker-service-build.mjs';
 import { loadConfig } from '../shared/config.mjs';
@@ -127,6 +128,8 @@ if (webhookUrl) {
     deployAction = 'skipped (nothing new)';
   }
 }
+
+if (!matchedTag) recordDeploy(config, log, { project: name, env, contract: contractVersion, sha: contentHash });
 
 const status = matchedTag ? 'up to date (skipped)' : 'built and pushed';
 printRecap(`Result: ${name} [${env}]`, [

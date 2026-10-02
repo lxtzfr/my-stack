@@ -18,6 +18,7 @@ import { buildAndDeployDockerService } from './docker-service-build.mjs';
 import { genVersion } from './gen-version.mjs';
 import { loadConfig } from '../shared/config.mjs';
 import { makeLogger } from '../shared/log.mjs';
+import { recordDeploy } from '../shared/deploy-log.mjs';
 
 const config = await loadConfig();
 const { workspaceRoot, configDir, envs, services = {}, bump = {} } = config;
@@ -77,5 +78,6 @@ await buildAndDeployDockerService({
   contextDir: svc.contextDir ? join(workspaceRoot, svc.contextDir) : undefined,
   composeFilePath: svc.composeFilePath,
   force,
+  onDeployed: ({ build, sha }) => recordDeploy(config, log, { project: service, env, contract: readContractVersion(config, service), build, sha }),
   runBuild: () => svc.build({ run, capture, env, versionTag, log, config }),
 });
