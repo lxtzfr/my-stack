@@ -129,7 +129,7 @@ if (webhookUrl) {
   }
 }
 
-if (!matchedTag) recordDeploy(config, log, { project: name, env, contract: contractVersion, sha: contentHash });
+if (!matchedTag) recordDeploy(config, log, { project: name, env, version: contractVersion, sha: contentHash });
 
 const status = matchedTag ? 'up to date (skipped)' : 'built and pushed';
 printRecap(`Result: ${name} [${env}]`, [

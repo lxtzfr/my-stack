@@ -160,7 +160,7 @@ cleanupOldPackages({ projectId: PROJECT_ID, packageName: PACKAGE });
 const downloadUrl = `https://gitlab.com/api/v4/projects/${PROJECT_ID}/packages/generic/${PACKAGE}/latest/${APK_NAME}`;
 log.step(`Download: ${downloadUrl}`);
 
-recordDeploy(config, log, { project: bumpProject, env, contract: contractVersion, build: displayVersion, sha: capture(['git', '-C', UNITY_PROJECT, 'rev-parse', '--short=10', 'HEAD']) });
+recordDeploy(config, log, { project: bumpProject, env, version: contractVersion, build: displayVersion, sha: capture(['git', '-C', UNITY_PROJECT, 'rev-parse', '--short=10', 'HEAD']) });
 
 checkoutMain(UNITY_PROJECT);
 

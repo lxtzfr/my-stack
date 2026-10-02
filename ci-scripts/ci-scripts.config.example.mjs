@@ -75,7 +75,7 @@ export default {
 
   // --- Optional: record every real deploy in a shared file. ---
   // After a build that really pushed something (never on an 'up to date' skip), `build`/`build-apk`/
-  // `build-sub-image` write `<env>.<project> = { contract, build, sha, at }` into `file` and push it
+  // `build-sub-image` write `<env>.<project> = { version, build, sha, at }` into `file` and push it
   // to `branch` of the git repo at `repo` (relative to this workspace root, e.g. a parent workspace
   // repo holding cross-project docs). The file keeps only the latest entry per env/project, so it
   // stays small; history is the branch's git log. Committed with git plumbing (temp index) — never

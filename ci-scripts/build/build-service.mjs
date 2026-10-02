@@ -78,6 +78,6 @@ await buildAndDeployDockerService({
   contextDir: svc.contextDir ? join(workspaceRoot, svc.contextDir) : undefined,
   composeFilePath: svc.composeFilePath,
   force,
-  onDeployed: ({ build, sha }) => recordDeploy(config, log, { project: service, env, contract: readContractVersion(config, service), build, sha }),
+  onDeployed: ({ build, sha }) => recordDeploy(config, log, { project: service, env, version: readContractVersion(config, service), build, sha }),
   runBuild: () => svc.build({ run, capture, env, versionTag, log, config }),
 });

@@ -38,7 +38,7 @@ function commitOnce(repoDir, { branch, file, project, env, entry }) {
     if (parent) git(repoDir, ['read-tree', parent], { env: indexEnv });
     git(repoDir, ['update-index', '--add', '--cacheinfo', `100644,${blob},${file}`], { env: indexEnv });
     const tree = git(repoDir, ['write-tree'], { env: indexEnv });
-    const message = `Deploy ${project} [${env}] ${entry.build ?? entry.contract ?? entry.sha}`;
+    const message = `Deploy ${project} [${env}] ${entry.build ?? entry.version ?? entry.sha}`;
     const commit = git(repoDir, ['commit-tree', tree, ...(parent ? ['-p', parent] : []), '-m', message]);
     git(repoDir, ['push', 'origin', `${commit}:refs/heads/${branch}`]);
   } finally {
@@ -50,7 +50,7 @@ function commitOnce(repoDir, { branch, file, project, env, entry }) {
  *  overwritten in place (the file stays small; history is `git log -p` on the branch). Committed
  *  straight onto its own branch via git plumbing, never the checked-out one. Best-effort: a failure
  *  here warns but never fails the deploy that already succeeded. No-op without a `deployLog` block.
- *  `entry` is free-form (contract, build, sha...); `at` is added here. */
+ *  `entry` is free-form (version, build, sha...); `at` is added here. */
 export function recordDeploy(config, log, { project, env, ...entry }) {
   const cfg = config.deployLog;
   if (!cfg) return;
