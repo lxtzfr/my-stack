@@ -96,7 +96,7 @@ data.version = newVersion
 writeFileSync(versionFilePath, JSON.stringify(data, null, 2) + '\n')
 
 git(['add', versionFilePath])
-git(['commit', '-m', `Bump ${project} contract to ${newVersion} (${kind})`])
+git(['commit', '-m', `Bump [${project}] to ${newVersion} (${kind})`])
 git(['push', 'origin', 'main'])
 
 log.done(`bumped contract ${currentVersion} -> ${newVersion}, pushed 'main'`)

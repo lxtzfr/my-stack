@@ -19,6 +19,13 @@ export function assertClean(repoDir, project) {
 // Refuses to proceed unless repoDir is checked out on deploy/<env> at a bump commit,
 // with no uncommitted changes on top of it.
 // Run `ci-scripts bump <project> <env>` first to produce that branch.
+
+// `Deploy [<project>] to <version> [<env>]` is what bump-version.mjs commits on deploy/<env>; the
+// pre-rename `Bump <project> to ...` is still accepted so a branch bumped before the rename builds.
+function isDeployCommit(subject, project) {
+  return subject.startsWith(`Deploy [${project}] to `) || subject.startsWith(`Bump ${project} to `);
+}
+
 export function assertBumped(repoDir, project, env) {
   assertClean(repoDir, project)
   const branch = git(repoDir, ['rev-parse', '--abbrev-ref', 'HEAD'])
@@ -27,7 +34,7 @@ export function assertBumped(repoDir, project, env) {
     process.exit(1);
   }
   const subject = git(repoDir, ['log', '-1', '--format=%s'])
-  if (!subject.startsWith(`Bump ${project} to `)) {
+  if (!isDeployCommit(subject, project)) {
     console.error(`HEAD of deploy/${env} in ${project} isn't a bump commit ('${subject}'). Re-run the bump script.`);
     process.exit(1);
   }
@@ -51,7 +58,7 @@ export function assertUpstreamReady(repoDir, project, env, { loose = false } = {
   const branch = git(repoDir, ['rev-parse', '--abbrev-ref', 'HEAD'])
   if (branch === `deploy/${env}`) {
     const subject = git(repoDir, ['log', '-1', '--format=%s'])
-    if (!subject.startsWith(`Bump ${project} to `)) {
+    if (!isDeployCommit(subject, project)) {
       console.error(`HEAD of ${project}'s deploy/${env} isn't a bump commit ('${subject}'). Re-run: ci-scripts bump ${project} ${env}`);
       process.exit(1);
     }

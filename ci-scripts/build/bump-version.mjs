@@ -153,7 +153,7 @@ pkg.version = newVersion
 writeFileSync(versionFilePath, JSON.stringify(pkg, null, 2) + '\n')
 
 git(['add', versionFilePath])
-git(['commit', '-m', env ? `Bump ${project} to ${newVersion} [${env}]` : `Bump ${project} to ${newVersion}`])
+git(['commit', '-m', env ? `Deploy [${project}] to ${newVersion} [${env}]` : `Deploy [${project}] to ${newVersion}`])
 git(deployBranchExistsRemotely ? ['push', 'origin', deployBranch] : ['push', '-u', 'origin', deployBranch])
 
 git(['checkout', sourceBranch])

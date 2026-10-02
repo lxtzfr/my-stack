@@ -39,7 +39,7 @@ function commitOnce(repoDir, { branch, file, project, env, entry }) {
     if (parent) git(repoDir, ['read-tree', parent], { env: indexEnv });
     git(repoDir, ['update-index', '--add', '--cacheinfo', `100644,${blob},${file}`], { env: indexEnv });
     const tree = git(repoDir, ['write-tree'], { env: indexEnv });
-    const message = `Deploy ${project} [${env}] ${entry.build ?? entry.version ?? entry.sha}`;
+    const message = `Deployed [${project}] to ${entry.version ?? entry.build ?? entry.sha} [${env}]`;
     const commit = git(repoDir, ['commit-tree', tree, ...(parent ? ['-p', parent] : []), '-m', message]);
     git(repoDir, ['push', 'origin', `${commit}:refs/heads/${branch}`]);
   } finally {
