@@ -1,6 +1,6 @@
 {
   "name": "@lxtzfr/my-stack-nestjs",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Generic NestJS request-lifecycle plumbing — request-scoped logging, global exception filters, Zod validation pipe.",
   "license": "MIT",
   "exports": {

@@ -1,6 +1,6 @@
 {
   "name": "@lxtzfr/my-stack-ci-scripts",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Config-driven bump / build / push / deploy toolkit (git + GitLab/GitHub registry + Dokploy)",
   "type": "module",
   "license": "MIT",

@@ -1,7 +1,7 @@
 {
   "name": "@lxtzfr/my-stack-core",
-  "version": "0.0.0",
-  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
   "description": "Install/update tooling for my-stack kits — CLAUDE.md pointer, .gitattributes, Git LFS. A devDependency of the consuming project, not of any kit. See README.md.",
   "type": "module",
   "bin": {
