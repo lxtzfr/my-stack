@@ -79,15 +79,17 @@ const versionTag = env;
 const subContract = config.contracts?.[name];
 const contractVersion = readContractVersionAt(dir, subContract?.versionFile);
 
-// Scoped to the *parent repo* root (not just sub.dir) — "any change anywhere" means anywhere in
-// that repo, same as a regular service's check, not just under this sub-image's own folder.
-// versionFile has to be re-expressed relative to that root since git diff reports paths that way.
+// Run from the *parent repo* root, but scoped to sub.dir: a sub-image's contract only has to move
+// when its own folder changed, not on every change elsewhere in that repo (a server change must
+// not force a tts bump). versionFile has to be re-expressed relative to the repo root since git
+// diff reports paths that way.
 const parentRepoDir = join(workspaceRoot, project);
 assertContractBumped(
   parentRepoDir,
   name,
   subContract ? { versionFile: `${sub.dir}/${subContract.versionFile}` } : undefined,
   versionBookkeepingPaths(config, parentRepoDir),
+  { scope: sub.dir },
 );
 
 const foundTag = findBySuffix(listImageTags({ project, imagePath }), `-${contentHash}`);

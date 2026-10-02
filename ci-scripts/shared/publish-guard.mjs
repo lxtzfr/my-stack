@@ -77,8 +77,11 @@ export function assertUpstreamReady(repoDir, project, env, { loose = false } = {
 // this can never miss something the way a path list could. `ignorePaths` excludes files that
 // change as a mechanical side effect of deploying itself (e.g. bump-version.mjs's own
 // per-env versionFile, rewritten on every `ci-scripts bump`), not real content changes.
+// `scope` (optional, a path relative to repoDir) limits the check to changes under it — for a
+// sub-image living in a folder of a bigger repo (e.g. server's tts/), whose contract must only move
+// when its own folder does, not on every change elsewhere in the repo.
 // A no-op if contractConfig isn't set (most projects have no `contracts` entry).
-export function assertContractBumped(repoDir, project, contractConfig, ignorePaths = []) {
+export function assertContractBumped(repoDir, project, contractConfig, ignorePaths = [], { scope } = {}) {
   if (!contractConfig?.versionFile) return;
   const { versionFile } = contractConfig;
 
@@ -89,7 +92,7 @@ export function assertContractBumped(repoDir, project, contractConfig, ignorePat
   }
 
   const ignored = new Set([versionFile, ...ignorePaths]);
-  const changed = git(repoDir, ['diff', '--name-only', `${lastBump}..HEAD`]).split('\n').filter(Boolean).filter(f => !ignored.has(f));
+  const changed = git(repoDir, ['diff', '--name-only', `${lastBump}..HEAD`, ...(scope ? ['--', scope] : [])]).split('\n').filter(Boolean).filter(f => !ignored.has(f));
   if (changed.length) {
     console.error(
       `${project}: files changed since the last bump-contract (${lastBump.slice(0, 10)}) without a new one:\n` +
