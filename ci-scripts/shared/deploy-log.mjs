@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const MAX_PUSH_ATTEMPTS = 3;
+const ON_RECORDED_TIMEOUT_MS = 60_000;
 
 function git(repoDir, args, { env, input, allowFail = false } = {}) {
   const r = spawnSync('git', args, { cwd: repoDir, encoding: 'utf8', env: { ...process.env, ...env }, input });
@@ -46,6 +47,16 @@ function commitOnce(repoDir, { branch, file, project, env, entry }) {
   }
 }
 
+/** Optional `deployLog.onRecorded` (argv array, run from `repo`) — e.g. regenerate a page from the
+ *  file just pushed. Best-effort like the record itself: a failure only warns. */
+function runOnRecorded(command, repoDir, log) {
+  if (!command?.length) return;
+  const [bin, ...args] = command;
+  const r = spawnSync(bin, args, { cwd: repoDir, encoding: 'utf8', timeout: ON_RECORDED_TIMEOUT_MS, shell: process.platform === 'win32' });
+  if (r.status === 0) log.step(`Ran ${command.join(' ')}`);
+  else log.warn(`${command.join(' ')} failed: ${(r.stderr || r.error?.message || 'exit ' + r.status).trim()}`);
+}
+
 /** Records what was just deployed in the shared `deployLog` file — one entry per `<env>.<project>`,
  *  overwritten in place (the file stays small; history is `git log -p` on the branch). Committed
  *  straight onto its own branch via git plumbing, never the checked-out one. Best-effort: a failure
@@ -63,6 +74,7 @@ export function recordDeploy(config, log, { project, env, ...entry }) {
     try {
       commitOnce(repoDir, { branch, file, project, env, entry: clean });
       log.step(`Recorded ${project} [${env}] in ${branch}:${file}`);
+      runOnRecorded(cfg.onRecorded, repoDir, log);
       return;
     } catch (err) {
       // A concurrent deploy moved the branch between our fetch and push — refetch and retry.

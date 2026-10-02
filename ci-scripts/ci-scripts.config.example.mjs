@@ -80,7 +80,9 @@ export default {
   // repo holding cross-project docs). The file keeps only the latest entry per env/project, so it
   // stays small; history is the branch's git log. Committed with git plumbing (temp index) — never
   // touches that repo's working tree or checked-out branch. Best-effort: a failure only warns.
-  // deployLog: { repo: '..', branch: 'deploys', file: 'versions.json' },
+  // Optional `onRecorded` (argv array, run from `repo` right after a successful record — best-effort)
+  // can regenerate something from the fresh file, e.g. a status page.
+  // deployLog: { repo: '..', branch: 'deploys', file: 'versions.json', onRecorded: ['node', 'scripts/render-versions.mjs'] },
 
   // --- `ci-scripts build <service> <env>`: one entry per docker-built service. ---
   // Registry (GitLab vs GitHub) is auto-detected per service from its own `git remote` — no config
