@@ -27,11 +27,16 @@ let cached = null;
 
 /** Loads and caches the consumer's ci-scripts/config.mjs, tagged with the resolved workspaceRoot
  *  and configDir (the ci-scripts/ folder itself, for .env / build recaps / any other ci-scripts-
- *  owned file a consumer wants grouped alongside its config). */
+ *  owned file a consumer wants grouped alongside its config). Also loads configDir/.env. */
 export async function loadConfig() {
   if (cached) return cached;
   const root = findWorkspaceRoot();
   const configDir = join(root, CONFIG_DIR);
+  // Before importing the consumer's config, so its top-level code (and anything it derives from
+  // process.env, e.g. envVars()) already sees ci-scripts/.env without loading it itself. Never
+  // overrides a variable already set in the real environment.
+  const envFile = join(configDir, '.env');
+  if (existsSync(envFile)) process.loadEnvFile(envFile);
   const mod = await import(pathToFileURL(join(configDir, 'config.mjs')).href);
   cached = { ...mod.default, workspaceRoot: root, configDir };
   if (!cached.envs) throw new Error(`ci-scripts/config.mjs must export an \`envs\` map (see ci-scripts.config.example.mjs).`);

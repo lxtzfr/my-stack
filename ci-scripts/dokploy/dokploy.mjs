@@ -1,10 +1,6 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { loadConfig } from '../shared/config.mjs';
 
 const config = await loadConfig();
-const ENV_FILE = join(config.configDir, '.env');
-if (existsSync(ENV_FILE)) process.loadEnvFile(ENV_FILE);
 
 // Checked lazily (not at import time) so scripts can import this module without requiring
 // DOKPLOY_TOKEN unless they actually end up calling the API (e.g. build-service.mjs, which only
