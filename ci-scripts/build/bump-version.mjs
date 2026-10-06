@@ -16,7 +16,8 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { makeLogger } from '../shared/log.mjs'
 import { loadConfig } from '../shared/config.mjs'
-import { readContractVersion } from '../shared/utils.mjs'
+import { readContractVersion, versionBookkeepingPaths } from '../shared/utils.mjs'
+import { assertContractBumped } from '../shared/publish-guard.mjs'
 
 const config = await loadConfig()
 const { workspaceRoot, bump: projects, envs, services = {} } = config
@@ -116,6 +117,13 @@ if (deployBranchExistsRemotely) {
     skip(`Nothing changed on '${sourceBranch}' since the last bump of '${env ? `${project}/${env}` : project}' — skipping.`)
   }
 }
+
+// --- Contract guard ---
+// Same check build-apk/build-service run before building, moved here so a deploy branch is never
+// cut (and pushed) from code whose contract wasn't bumped: failing only at build time left
+// deploy/<env> already published with a version nobody could build. Runs on the source branch's
+// HEAD (checked out above, before any merge). No-op when the project has no `contracts` entry.
+assertContractBumped(repoDir, project, config.contracts?.[project], versionBookkeepingPaths(config, repoDir))
 
 // --- Compute the new version from the current date/time ---
 const d = new Date()
