@@ -151,9 +151,14 @@ export function readContractVersion(config, project) {
   return readContractVersionAt(repoDir, projectConfig.versionFile)
 }
 
-/** Switch repoDir back to main. Call at the end of a build script so it never stays on deploy/<env>. */
+/** Switch repoDir back to the branch it was on before deploy/<env> (main by default). Call at the end of a build script so it never stays on deploy/<env>. */
 export function checkoutMain(repoDir) {
-  run(['git', 'checkout', 'main'], { cwd: repoDir });
+  // Return to the branch the deploy/<env> checkout was made from (a loose env can be deployed from
+  // any WIP branch), falling back to main when that isn't a plain branch (detached, another
+  // deploy/ branch, no reflog entry).
+  const previous = capture(['git', '-C', repoDir, 'rev-parse', '--abbrev-ref', '@{-1}']); // '' when there is none
+  const target = previous && previous !== 'HEAD' && !previous.startsWith('deploy/') ? previous : 'main';
+  run(['git', 'checkout', target], { cwd: repoDir });
   // Discard tracked-file changes a build may have left behind (e.g. BuildScript.BuildAPK
   // writing env values into BuildConfig.cs / ProjectSettings.asset) — git checkout alone
   // carries non-conflicting local modifications forward instead of resetting them.
