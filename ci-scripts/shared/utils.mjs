@@ -137,6 +137,13 @@ export function versionBookkeepingPaths(config, repoDir) {
   return [...paths];
 }
 
+/** Whether `env` is deployed "loose": from any branch, with no contract bump required. Every env
+ *  is loose except those in `config.strictEnvs` (default `['prd']`) — only the production deploy
+ *  has to come from reviewed, in-sync main with a fresh bump-contract. */
+export function isLooseEnv(config, env) {
+  return !(config.strictEnvs ?? ['prd']).includes(env)
+}
+
 export function readContractVersion(config, project) {
   const projectConfig = config.contracts?.[project]
   if (!projectConfig) return null

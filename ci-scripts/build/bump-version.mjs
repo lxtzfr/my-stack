@@ -5,10 +5,10 @@
 // project with `fixedBranch` always bumps to that single branch (no env); otherwise it bumps to
 // deploy/<env> for one of config's `envs` (minus 'loc'). The source branch is 'main' by default
 // (requires being on it, in sync with origin/main — a deploy branch only ever cuts from reviewed,
-// shared code) unless `bump[project].looseEnvs` lists this env, in which case it bumps from
-// whatever branch is currently checked out instead — useful for testing a WIP branch's own deploy
-// (e.g. dev) without merging to main first. Still requires that branch to be clean and in sync
-// with its own origin tracking branch.
+// shared code) for strict envs only (`strictEnvs`, default prd). Every other env bumps from
+// whatever branch is currently checked out instead, with no contract bump required — so a WIP
+// branch can be deployed (dev, stg...) without merging to main first. Still requires that branch
+// to be clean and in sync with its own origin tracking branch.
 // Usage: node build/bump-version.mjs [project] [env]   (env prompted/ignored for fixedBranch projects)
 import { resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -16,7 +16,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { makeLogger } from '../shared/log.mjs'
 import { loadConfig } from '../shared/config.mjs'
-import { readContractVersion, versionBookkeepingPaths } from '../shared/utils.mjs'
+import { readContractVersion, versionBookkeepingPaths, isLooseEnv } from '../shared/utils.mjs'
 import { assertContractBumped } from '../shared/publish-guard.mjs'
 
 const config = await loadConfig()
@@ -81,10 +81,9 @@ if (git(['status', '--porcelain'])) {
   fail('Working tree is not clean. Commit or stash changes before bumping the version.')
 }
 
-// fixedBranch projects (no per-env deploy cycle) always require main. Otherwise, an env listed in
-// `looseEnvs` bumps from whatever's currently checked out instead of requiring main.
-const looseEnvs = projects[project].looseEnvs ?? []
-const strict = fixedBranch != null || !looseEnvs.includes(env)
+// fixedBranch projects (no per-env deploy cycle) always require main. Otherwise, every env except
+// the config's `strictEnvs` (default prd) bumps from whatever's currently checked out instead.
+const strict = fixedBranch != null || !isLooseEnv(config, env)
 const currentBranch = git(['rev-parse', '--abbrev-ref', 'HEAD'])
 const sourceBranch = strict ? 'main' : currentBranch
 
@@ -122,8 +121,9 @@ if (deployBranchExistsRemotely) {
 // Same check build-apk/build-service run before building, moved here so a deploy branch is never
 // cut (and pushed) from code whose contract wasn't bumped: failing only at build time left
 // deploy/<env> already published with a version nobody could build. Runs on the source branch's
-// HEAD (checked out above, before any merge). No-op when the project has no `contracts` entry.
-assertContractBumped(repoDir, project, config.contracts?.[project], versionBookkeepingPaths(config, repoDir))
+// HEAD (checked out above, before any merge). No-op when the project has no `contracts` entry, and
+// skipped for loose envs (non-prd): a dev/stg deploy must not force a contract bump.
+if (strict) assertContractBumped(repoDir, project, config.contracts?.[project], versionBookkeepingPaths(config, repoDir))
 
 // --- Compute the new version from the current date/time ---
 const d = new Date()

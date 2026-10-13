@@ -4,7 +4,7 @@
 // Usage: node build/build-apk.mjs [env] [--force]
 import { mkdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { run, capture, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap, readContractVersion, versionBookkeepingPaths } from '../shared/utils.mjs';
+import { run, capture, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap, readContractVersion, versionBookkeepingPaths, isLooseEnv } from '../shared/utils.mjs';
 import { cleanupOldPackages, listPackageVersions, pruneOldPackageFiles } from './gitlab-packages.mjs';
 import { assertBumped, assertUpstreamReady, assertGeneratedClientFresh, assertContractBumped } from '../shared/publish-guard.mjs';
 import { genVersion } from './gen-version.mjs';
@@ -27,12 +27,14 @@ const env = process.argv.find(a => Object.keys(apk.envs).includes(a)) ?? Object.
 const log = makeLogger(bumpProject, env);
 log.step('Starting build');
 
+// Loose (non-prd) envs build from any branch's deploy commit: upstream branch identity isn't
+// enforced and no contract bump is required.
+const loose = isLooseEnv(config, env);
 assertBumped(UNITY_PROJECT, bumpProject, env);
 if (apk.upstream) {
-  const loose = (apk.looseUpstreamEnvs ?? []).includes(env);
   assertUpstreamReady(join(workspaceRoot, apk.upstream), apk.upstream, env, { loose });
 }
-assertContractBumped(UNITY_PROJECT, bumpProject, config.contracts?.[bumpProject], versionBookkeepingPaths(config, UNITY_PROJECT));
+if (!loose) assertContractBumped(UNITY_PROJECT, bumpProject, config.contracts?.[bumpProject], versionBookkeepingPaths(config, UNITY_PROJECT));
 
 if (apk.apiClientFreshness) {
   log.step('Checking generated API clients are up to date...');
@@ -59,7 +61,9 @@ const PACKAGE    = `${apk.packagePrefix}-${env}`;
 // a separate asset repo (apk.assetProjectDir, a UPM git dependency pinned to assetBranch)
 // contributes content assertContractBumped's repo-local diff can't see.
 const contractVersion = readContractVersion(config, bumpProject);
-const useContractIdentity = Boolean(contractVersion) && !ASSET_PROJECT;
+// A loose env skips the contract-bumped guard, so the contract version no longer identifies the
+// content: fall back to the commit sha.
+const useContractIdentity = Boolean(contractVersion) && !ASSET_PROJECT && !loose;
 
 let shaIdentity = null;
 if (!useContractIdentity) {

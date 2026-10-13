@@ -8,7 +8,7 @@
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { findBySuffix, printRecap, writeRecap, readContractVersionAt, versionBookkeepingPaths } from '../shared/utils.mjs';
+import { findBySuffix, printRecap, writeRecap, readContractVersionAt, versionBookkeepingPaths, isLooseEnv } from '../shared/utils.mjs';
 import { assertContractBumped } from '../shared/publish-guard.mjs';
 import { recordDeploy } from '../shared/deploy-log.mjs';
 import { dockerLogin, dockerBuildPush, cleanupOldTags, listImageTags, resolveRegistry } from './docker-registry.mjs';
@@ -84,7 +84,7 @@ const contractVersion = readContractVersionAt(dir, subContract?.versionFile);
 // not force a tts bump). versionFile has to be re-expressed relative to the repo root since git
 // diff reports paths that way.
 const parentRepoDir = join(workspaceRoot, project);
-assertContractBumped(
+if (!isLooseEnv(config, env)) assertContractBumped(
   parentRepoDir,
   name,
   subContract ? { versionFile: `${sub.dir}/${subContract.versionFile}` } : undefined,

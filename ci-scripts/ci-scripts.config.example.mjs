@@ -28,6 +28,10 @@ export default {
   },
 
   // --- Env catalog. 'loc' is conventionally local-only — every other key is deployable. ---
+  // Envs deployed strictly: from main, in sync with origin, with a fresh bump-contract. Every other
+  // env is "loose" (any branch, no contract bump). Default: ['prd'].
+  // strictEnvs: ['prd'],
+
   envs: {
     loc: { host: 'localhost:3000', apiHost: 'http://localhost:3001' },
     dev: subdomainEnv(DOMAIN, 'dev'),
@@ -42,10 +46,10 @@ export default {
     unity:  { versionFile: 'unity/package.json' },
     // fixedBranch: no per-env deploys — always bumps to this single branch.
     'unity-asset': { versionFile: 'unity-asset/Assets/Export/package.json', fixedBranch: 'deploy/release' },
-    // looseEnvs: bump this project for 'dev' from whatever branch is currently checked out,
-    // instead of requiring 'main' (still requires it be clean and pushed) — handy for testing a
-    // WIP branch's own deploy before merging. Envs not listed here (stg/prd) still require main.
-    // server: { versionFile: 'server/package.json', looseEnvs: ['dev'] },
+    // Every env except `strictEnvs` (below, default ['prd']) bumps from whatever branch is
+    // currently checked out (still clean and pushed) and needs no bump-contract — handy for
+    // deploying a WIP branch to dev/stg before merging. strictEnvs still require main + a fresh
+    // contract bump.
   },
 
   // --- `ci-scripts bump-contract <project> <major|minor|patch>`: one semver contract version per
@@ -116,7 +120,6 @@ export default {
       upstream: ['server'], // must be deploy/<env>-ready (or main, in sync) before web builds against it
       // dev can build against server's WIP branch as-is (still must be clean) — stg/prd still
       // require server to be at a real deploy/<env> bump or in-sync main.
-      looseUpstreamEnvs: ['dev'],
       build: async ({ run, env, versionTag, log, config }) => {
         log.step('Generating spec...');
         run(['pnpm', '--filter', '@myapp/server', 'generate:spec']);
@@ -145,7 +148,6 @@ export default {
     assetBranch: 'deploy/release',  // required alongside assetProjectDir; ignored otherwise
     buildMethod: 'BuildScript.BuildAPK', // static method in your Unity project's build script
     upstream: 'server',
-    looseUpstreamEnvs: ['dev'], // dev builds against server as-is (still must be clean) — see services.<name>.looseUpstreamEnvs
     specGenCommand: ['pnpm', '--filter', '@myapp/server', 'generate:spec'],
     apiClientFreshness: { // optional — skip if you don't generate a client into the Unity project
       lockFile: 'unity/scripts/specs.lock.json',
