@@ -22,8 +22,15 @@ const ASSET_PROJECT = apk.assetProjectDir ? join(workspaceRoot, apk.assetProject
 const OUTPUT_DIR    = join(configDir, '.builds');
 const APK_NAME       = apk.fileName;
 
-const force = process.argv.includes('--force');
-const env = process.argv.find(a => Object.keys(apk.envs).includes(a)) ?? Object.keys(apk.envs)[0];
+const args = process.argv.slice(2);
+const force = args.includes('--force');
+const apkEnvs = Object.keys(apk.envs);
+// Same validation as build-service.mjs: an env missing from apk.envs must fail loudly, never fall
+// back to another env's bundle id/app name (a `dem` request silently shipping a `dev` build).
+const env = args.filter(a => a !== '--force')[0] ?? apkEnvs[0];
+if (!apkEnvs.includes(env)) {
+  console.error(`env '${env}' has no apk.envs entry — must be one of: ${apkEnvs.join(', ')}`); process.exit(1);
+}
 const log = makeLogger(bumpProject, env);
 log.step('Starting build');
 

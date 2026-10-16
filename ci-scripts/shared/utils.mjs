@@ -79,7 +79,8 @@ export function writeRecap(configDir, key, data) {
   writeFileSync(join(dir, `${key}.json`), JSON.stringify(data, null, 2));
 }
 
-/** Reads back what writeRecap() wrote, or null if it's missing (build step failed before writing it). */
+/** Reads back what writeRecap() wrote, or null if it's missing. A failed step doesn't remove the
+ *  previous run's file — only read it after a successful (0) or skipped (2) step. */
 export function readRecap(configDir, key) {
   try {
     return JSON.parse(readFileSync(join(configDir, '.builds', 'recaps', `${key}.json`), 'utf8'));
@@ -158,9 +159,11 @@ export function checkoutMain(repoDir) {
   // deploy/ branch, no reflog entry).
   const previous = capture(['git', '-C', repoDir, 'rev-parse', '--abbrev-ref', '@{-1}']); // '' when there is none
   const target = previous && previous !== 'HEAD' && !previous.startsWith('deploy/') ? previous : 'main';
-  run(['git', 'checkout', target], { cwd: repoDir });
   // Discard tracked-file changes a build may have left behind (e.g. BuildScript.BuildAPK
-  // writing env values into BuildConfig.cs / ProjectSettings.asset) — git checkout alone
-  // carries non-conflicting local modifications forward instead of resetting them.
+  // writing env values into BuildConfig.cs / ProjectSettings.asset) — before the checkout, not
+  // after: git checkout refuses to switch when such a change touches a file that differs on the
+  // target branch, and carries the non-conflicting ones forward instead of resetting them. Safe on
+  // deploy/<env>: bump requires a clean tree, so every change here is build output.
   run(['git', 'restore', '.'], { cwd: repoDir });
+  run(['git', 'checkout', target], { cwd: repoDir });
 }

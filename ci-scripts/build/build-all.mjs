@@ -74,7 +74,7 @@ for (const [service, svc] of Object.entries(services)) {
 // Sub-images have no repo/branch/bump cycle of their own — build them straight off main.
 for (const name of Object.keys(subImages)) {
   const buildStatus = runStep(`Build ${name} [${env}]`, ['node', join(__dirname, 'build-sub-image.mjs'), name, env, ...(force ? ['--force'] : [])])
-  const recap = readRecap(configDir, `${name}-${env}`)
+  const recap = buildStatus === 0 || buildStatus === 2 ? readRecap(configDir, `${name}-${env}`) : null
   results.push({ project: name, status: buildStatus === 0 ? 'built' : buildStatus === 2 ? 'up to date' : 'FAILED (build)', recap })
 }
 
@@ -90,7 +90,7 @@ if (apk && Object.keys(apk.envs).includes(env)) {
       results.push({ project: bumpProject, status: `FAILED (no deploy/${env} branch — bump it first)` })
     } else {
       const buildStatus = runStep(`Build ${bumpProject} [${env}]`, ['node', join(__dirname, 'build-apk.mjs'), env, ...(force ? ['--force'] : [])])
-      const recap = readRecap(configDir, `${bumpProject}-${env}`)
+      const recap = buildStatus === 0 || buildStatus === 2 ? readRecap(configDir, `${bumpProject}-${env}`) : null // a failed build leaves the previous run's recap behind
       results.push({ project: bumpProject, status: buildStatus === 0 ? 'built' : buildStatus === 2 ? 'up to date' : 'FAILED (build)', recap })
     }
   }
