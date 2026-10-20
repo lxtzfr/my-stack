@@ -4,7 +4,7 @@
 // Usage: node build/build-apk.mjs [env] [--force]
 import { mkdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { run, capture, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap, readContractVersion, versionBookkeepingPaths, isLooseEnv } from '../shared/utils.mjs';
+import { run, capture, registryRemoteUrl, parseNamespace, resolveProjectId, checkoutMain, findBySuffix, printRecap, writeRecap, readContractVersion, versionBookkeepingPaths, isLooseEnv } from '../shared/utils.mjs';
 import { cleanupOldPackages, listPackageVersions, pruneOldPackageFiles } from './gitlab-packages.mjs';
 import { assertBumped, assertUpstreamReady, assertGeneratedClientFresh, assertContractBumped } from '../shared/publish-guard.mjs';
 import { genVersion } from './gen-version.mjs';
@@ -49,7 +49,7 @@ if (apk.apiClientFreshness) {
   assertGeneratedClientFresh({ workspaceRoot, ...apk.apiClientFreshness });
 }
 
-const unityRemote = capture(['git', '-C', UNITY_PROJECT, 'remote', 'get-url', 'origin']);
+const unityRemote = registryRemoteUrl(UNITY_PROJECT, config);
 const NAMESPACE  = parseNamespace(unityRemote);
 const REPO_NAME  = unityRemote.replace(/\.git$/, '').split(/[:/]/).pop();
 const PROJECT_ID = resolveProjectId(NAMESPACE, REPO_NAME);

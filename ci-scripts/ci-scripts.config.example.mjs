@@ -88,6 +88,10 @@ export default {
   // can regenerate something from the fresh file, e.g. a status page.
   // deployLog: { repo: '..', branch: 'deploys', file: 'versions.json', onRecorded: ['node', 'scripts/render-versions.mjs'] },
 
+  // Optional: publish images/APK packages to a different host than `origin` (code stays on origin).
+  // `{repo}` = the repo's name as given by origin. Omit to use origin for both.
+  // registryRemote: 'git@gitlab.com:my-group/{repo}.git',
+
   // --- `ci-scripts build <service> <env>`: one entry per docker-built service. ---
   // Registry (GitLab vs GitHub) is auto-detected per service from its own `git remote` — no config
   // needed, a GitLab-hosted service and a GitHub-hosted one can coexist here. A service only goes

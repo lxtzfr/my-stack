@@ -1,10 +1,11 @@
 import { join } from 'node:path';
-import { capture } from '../shared/utils.mjs';
+import { registryRemoteUrl } from '../shared/utils.mjs';
 import { loadConfig } from '../shared/config.mjs';
 import * as gitlab from './registries/gitlab.mjs';
 import * as github from './registries/github.mjs';
 
-const { workspaceRoot: WORKSPACE_ROOT } = await loadConfig();
+const config = await loadConfig();
+const { workspaceRoot: WORKSPACE_ROOT } = config;
 
 const PROVIDERS = { gitlab, github };
 
@@ -16,7 +17,7 @@ const PROVIDERS = { gitlab, github };
  *  returns `repoName`, the repo's own name parsed straight from its remote — distinct from `dir`
  *  (which can be `.`) and required by GitLab's project-scoped registry API. */
 export function resolveRegistry(dir) {
-  const remote = capture(['git', '-C', join(WORKSPACE_ROOT, dir), 'remote', 'get-url', 'origin']);
+  const remote = registryRemoteUrl(join(WORKSPACE_ROOT, dir), config);
   const provider = /github\.com/.test(remote) ? 'github' : /gitlab\.com/.test(remote) ? 'gitlab' : null;
   if (!provider) throw new Error(`Cannot detect a supported registry provider (gitlab.com or github.com) from remote: ${remote}`);
   const impl = PROVIDERS[provider];

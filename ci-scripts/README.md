@@ -98,8 +98,10 @@ See the fully-commented [`ci-scripts.config.example.mjs`](ci-scripts.config.exam
 | `apk` | `build-apk`, `build-all` | Unity Android build config (GitLab only) |
 | `dokploySetup` | `dokploy-setup-env` | how to provision composes/domains/wildcard for a new env |
 
-Registry (GitLab vs. GitHub) is auto-detected per service from its own `git remote get-url origin`
-— not a config field.
+Registry (GitLab vs. GitHub) is auto-detected per service from its own `git remote get-url origin`.
+To keep code (and the `main`/`deploy/<env>` branches) on one host but publish images and packages
+to another, set the top-level `registryRemote` — a URL template, `{repo}` being the repo's name from
+`origin`: `registryRemote: 'git@gitlab.com:<group>/{repo}.git'`. No second git remote needed.
 
 ## Running in CI
 

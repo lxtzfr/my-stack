@@ -89,6 +89,16 @@ export function readRecap(configDir, key) {
   }
 }
 
+/** Remote URL that decides where images/packages are published for the repo at `repoDir`: the
+ *  config's `registryRemote` template (`{repo}` = the repo's name, taken from `origin`) if set, else
+ *  `origin` itself. Lets code live on one host (`origin`, e.g. GitHub) while images and packages
+ *  go to another (e.g. GitLab) without a second git remote. */
+export function registryRemoteUrl(repoDir, config) {
+  const origin = capture(['git', '-C', repoDir, 'remote', 'get-url', 'origin']);
+  if (!config.registryRemote) return origin;
+  return config.registryRemote.replace('{repo}', origin.replace(/\.git$/, '').split(/[:/]/).pop());
+}
+
 /** Parse GitLab namespace from a git remote URL. */
 export function parseNamespace(remote) {
   const m = remote.match(/gitlab\.com[:/](.+)\/[^/]+$/);
